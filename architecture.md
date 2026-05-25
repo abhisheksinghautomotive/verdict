@@ -83,7 +83,7 @@ GitHub trades an OIDC token for IAM credentials, pushes the image, deploys to EK
 
 ```mermaid
 flowchart TB
-    subgraph AWS["AWS Account · us-east-1"]
+    subgraph AWS["AWS Account · ap-south-1"]
         subgraph VPC["VPC 10.0.0.0/16"]
             subgraph PUB["Public Subnet · 1 AZ · 10.0.1.0/24"]
                 NODE["EKS Node<br/>t3.small SPOT<br/>public IP"]
@@ -123,14 +123,14 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph AWS["AWS Account · us-east-1"]
+    subgraph AWS["AWS Account · ap-south-1"]
         subgraph VPC["VPC 10.0.0.0/16"]
-            subgraph AZ1["AZ us-east-1a"]
+            subgraph AZ1["AZ ap-south-1a"]
                 PUB1["Public Subnet"]
                 PRIV1["Private Subnet"]
                 NAT1["NAT GW"]
             end
-            subgraph AZ2["AZ us-east-1b"]
+            subgraph AZ2["AZ ap-south-1b"]
                 PUB2["Public Subnet"]
                 PRIV2["Private Subnet"]
                 NAT2["NAT GW"]
