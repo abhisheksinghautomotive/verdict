@@ -52,7 +52,7 @@ Four milestones, eight weeks. Each issue lists **Required** (the deliverable and
 
 ### Issue 2: Provision VPC with configurable AZs and subnet topology
 
-**Required:** A reusable VPC Terraform module supporting 1 to 3 AZs and optional private subnets. Dev passes `availability_zones = ["us-east-1a"]` and `enable_private_subnets = false`. Prod passes two AZs with private subnets enabled, without module changes.
+**Required:** A reusable VPC Terraform module supporting 1 to 3 AZs and optional private subnets. Dev passes `availability_zones = ["ap-south-1a"]` and `enable_private_subnets = false`. Prod passes two AZs with private subnets enabled, without module changes.
 
 **How:**
 - Create `terraform/modules/vpc/` with `main.tf`, `variables.tf`, `outputs.tf`.
@@ -166,7 +166,7 @@ Four milestones, eight weeks. Each issue lists **Required** (the deliverable and
 - Add `aws_eks_node_group` inside the EKS module.
 - Inputs: `instance_types` (default `["t3.small"]`), `capacity_type` (`"SPOT"`), `desired_size` (1), `min_size` (1), `max_size` (2).
 - Attach IAM policies: `AmazonEKSWorkerNodePolicy`, `AmazonEKS_CNI_Policy`, `AmazonEC2ContainerRegistryReadOnly`.
-- Verify: `aws eks update-kubeconfig --region us-east-1 --name verdict-dev` then `kubectl get nodes` shows `Ready`.
+- Verify: `aws eks update-kubeconfig --region ap-south-1 --name verdict-dev` then `kubectl get nodes` shows `Ready`.
 
 ---
 
@@ -314,7 +314,7 @@ Four milestones, eight weeks. Each issue lists **Required** (the deliverable and
 - Create `.github/workflows/pr-test-gate.yml`.
 - `on: pull_request: branches: [main]`.
 - Top-level `permissions: id-token: write, contents: read, pull-requests: write`.
-- Step: `uses: aws-actions/configure-aws-credentials@v4` with `role-to-assume: <arn>`, `aws-region: us-east-1`.
+- Step: `uses: aws-actions/configure-aws-credentials@v4` with `role-to-assume: <arn>`, `aws-region: ap-south-1`.
 
 ---
 
