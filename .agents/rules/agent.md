@@ -238,6 +238,22 @@ When done:
 - [ ] No uncommitted secrets or local configs.
 - [ ] `make cost` checked — spend on track.
 
+## 20. Hand-Off document for each chat session
+Each chat session will be based on only 1 issue, no other issues or other tasks will be done in the chat. after the issue is succesfully complete update the .agents/hand-off.md with all the information related to the task
+
+this is done so that each chat will have the context of the work and progress
+
+## 21. Code Review Graph (CRG) Usage
+Mandatory tool for codebase traversal and impact analysis.
+- **Trigger**: Run `build_or_update_graph_tool` with `postprocess="minimal"` (dev) or `"full"` (milestone/release) at the start of every session and after any file modifications.
+- **Blast Radius Analysis**: Run `get_impact_radius_tool` to define code dependencies and blast radius before modifying any source code.
+- **Pre-PR Review**: Run `get_review_context_tool` with `detail_level="minimal"` to get a token-efficient summary of changes prior to pushing the PR.
+
+## 22. Cloud & CI/CD Debugging Protocol
+Always use command-line interface (CLI) or API tools directly to debug service and deployment failures. Do not guess or assume state based on code alone.
+- **GitHub Actions**: Debug runner failures, logs, and triggers using the GitHub CLI (`gh run view`, `gh run jobs`, `gh api`).
+- **AWS Services**: Query and verify EKS, IAM, VPC, Secrets Manager, and KMS state directly via the AWS CLI (`aws eks`, `aws iam`, `aws secretsmanager`, etc.).
+
 ---
 
-*This file is law. PRs violating it are rejected. Last updated: 2026-05-25.*
+*This file is law. PRs violating it are rejected. Last updated: 2026-05-26.*
