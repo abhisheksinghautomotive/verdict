@@ -2,6 +2,29 @@
 
 ---
 
+## Issue 8: Create route tables for public and private subnets
+
+### Status
+- **Completed Issue**: GitHub Issue #8 (`Issue 4` in `milestones.md`)
+- **Git Branch**: `feat/issue-8-route-tables`
+
+### What Was Completed
+1. **Created public route table and route**: Always created `aws_route_table.public` and an `aws_route` for `0.0.0.0/0` pointing to the Internet Gateway.
+2. **Associated public subnets**: Associated all public subnets with the public route table using `aws_route_table_association.public`.
+3. **Conditional private route table**: Gated `aws_route_table.private` behind `var.enable_private_subnets`.
+4. **Conditional private NAT route**: Gated `aws_route.private_nat_gateway` behind `var.enable_private_subnets && var.enable_nat` to route to the NAT Gateway when enabled.
+5. **Associated private subnets**: Associated private subnets dynamically to the private route table when private subnets exist.
+6. **Validation & Planning**:
+   - Formatted all files with `terraform fmt -recursive`.
+   - Validated syntax with `terraform validate`.
+   - Tested dev mode plan (6 resources added, no private or NAT resources).
+   - Tested prod mode plan (12 resources added, private subnets, NAT Gateway, EIP, private route tables, routes, and associations all proposed correctly).
+
+### Next Steps
+- Implement **Issue 5**: Define security groups for EKS nodes and ALB.
+
+---
+
 ## Issue 7: Configure Internet Gateway and conditional NAT Gateway
 
 ### Status
