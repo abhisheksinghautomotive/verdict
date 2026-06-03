@@ -54,3 +54,11 @@ resource "aws_dynamodb_table" "tflock" {
 
   tags = local.common_tags
 }
+
+module "budget" {
+  source = "../modules/budget"
+
+  alert_email = var.alert_email
+  common_tags = local.common_tags
+}
+

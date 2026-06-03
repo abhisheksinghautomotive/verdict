@@ -7,3 +7,9 @@ output "dynamodb_table_name" {
   value       = aws_dynamodb_table.tflock.name
   description = "The name of the DynamoDB table created for Terraform state locking"
 }
+
+output "sns_topic_arn" {
+  value       = module.budget.sns_topic_arn
+  description = "The ARN of the SNS topic created for budget alerts"
+}
+
