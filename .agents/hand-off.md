@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 9: Define security groups for EKS nodes and ALB
+
+### Status
+- **Completed Issue**: GitHub Issue #9 (`Issue 5` in `milestones.md`)
+- **Git Branch**: `feat/issue-9-security-groups`
+
+### What Was Completed
+1. **Created Security Groups file**: Added `terraform/modules/vpc/security_groups.tf` containing all security groups and rules.
+2. **Configured Node Security Group**: Created `aws_security_group.eks_nodes` for worker nodes. Added rules to allow ingress from self (all ports/protocols), ingress from the ALB security group on TCP port range `1025-65535`, and egress to all (`0.0.0.0/0` on all protocols).
+3. **Configured ALB Security Group**: Created `aws_security_group.alb` for the application load balancer. Added rules to allow HTTP (port 80) and HTTPS (port 443) ingress from `0.0.0.0/0`, and egress limited strictly to the node security group on TCP port range `1025-65535`.
+4. **Exposed Outputs**: Added `node_security_group_id` and `alb_security_group_id` to both the VPC module `outputs.tf` and the root dev environment `outputs.tf`.
+5. **Validation & Planning**:
+   - Initialized and validated using `terraform init` and `terraform validate`.
+   - Verified that `terraform plan` shows exactly 8 new resources to be added (the 2 security groups and 6 security group rules).
+   - Formatted all code using `terraform fmt -recursive`.
+
+### Next Steps
+- Implement **Issue 6**: Package VPC as a clean Terraform module.
+
+---
+
 ## Issue 8: Create route tables for public and private subnets
 
 ### Status
