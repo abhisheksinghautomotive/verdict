@@ -48,5 +48,11 @@ output "ecr_repository_url" {
   value       = module.ecr.repository_url
 }
 
+output "irsa_role_arn" {
+  description = "The ARN of the IAM role for the application pods (IRSA)"
+  value       = module.iam.role_arn
+}
+
+
 
 

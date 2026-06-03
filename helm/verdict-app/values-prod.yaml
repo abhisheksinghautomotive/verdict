@@ -1,0 +1,5 @@
+serviceAccount:
+  create: true
+  name: "verdict-app"
+  annotations:
+    eks.amazonaws.com/role-arn: ""
