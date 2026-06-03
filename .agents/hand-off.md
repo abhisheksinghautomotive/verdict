@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 7: Configure Internet Gateway and conditional NAT Gateway
+
+### Status
+- **Completed Issue**: GitHub Issue #7 (`Issue 3` in `milestones.md`)
+- **Git Branch**: `feat/issue-7-internet-nat-gateway`
+
+### What Was Completed
+1. **Configured Internet Gateway**: Always created `aws_internet_gateway` inside the VPC module, attached to the VPC.
+2. **Configured Conditional NAT Gateway**: Gated `aws_eip` and `aws_nat_gateway` behind the `enable_nat` boolean variable using `count = var.enable_nat ? 1 : 0`.
+3. **Subnet Placement**: Placed the NAT Gateway in the first public subnet dynamically via `aws_subnet.public[var.availability_zones[0]].id`.
+4. **Validation and Formatting**:
+   - Validated syntax using `terraform validate`.
+   - Verified that running `terraform plan` with `enable_nat = false` provisions 3 resources (VPC, public subnet, Internet Gateway) and 0 private/NAT resources.
+   - Verified that running `terraform plan` with `enable_nat = true` provisions 5 resources (adding Elastic IP and NAT Gateway).
+   - Formatted all code using `terraform fmt -recursive`.
+
+### Next Steps
+- Implement **Issue 8**: Create route tables for public and private subnets.
+
+---
+
 ## Issue 6: Provision VPC with configurable AZs and subnet topology
 
 ### Status
