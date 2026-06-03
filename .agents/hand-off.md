@@ -2,6 +2,32 @@
 
 ---
 
+## Issue 6: Provision VPC with configurable AZs and subnet topology
+
+### Status
+- **Completed Issue**: GitHub Issue #6 (`Issue 2` in `milestones.md`)
+- **Git Branch**: `feat/issue-6-vpc-topology`
+
+### What Was Completed
+1. **Created a reusable VPC module** under `terraform/modules/vpc/`:
+   - `variables.tf`: Parameterized VPC `cidr_block` (default `10.0.0.0/16`), `availability_zones` (list, restricted to 1-3 valid zones in `ap-south-1` via validation), `enable_private_subnets`, `enable_nat` (forward compatibility), and `common_tags`.
+   - `main.tf`: Provisions `aws_vpc` with DNS resolution, `aws_subnet.public` dynamically with EKS tags, and `aws_subnet.private` conditionally. Subnet CIDRs are offset dynamically to prevent overlap.
+   - `outputs.tf`: Outputs `vpc_id`, `public_subnet_ids`, and `private_subnet_ids`.
+2. **Integrated VPC module into the dev environment**:
+   - `terraform/environments/dev/variables.tf`: Region parameter with validation.
+   - `terraform/environments/dev/main.tf`: Instantiated `vpc` module with single AZ `ap-south-1a`, public subnets only.
+   - `terraform/environments/dev/outputs.tf`: Forwards VPC and subnet outputs.
+   - `terraform/environments/dev/providers.tf` & `versions.tf`: Binds to AWS provider `>= 5.0` and regional provider config.
+3. **Validated formatting and syntax**:
+   - Formatted files via `terraform fmt -recursive`.
+   - Initialized and validated dev environment using `terraform init` and `terraform validate`.
+   - Verified the execution plan via `terraform plan` showing 2 additions (VPC, public subnet) and 0 private subnets.
+
+### Next Steps
+- Implement **Issue 3**: Configure Internet Gateway and conditional NAT Gateway.
+
+---
+
 ## Issue 5: Create AWS Budget with $10 / $25 / $50 / $75 SNS alerts
 
 ### Status
