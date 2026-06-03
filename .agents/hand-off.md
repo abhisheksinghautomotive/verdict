@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 10: Create ECR repository with scan-on-push and image lifecycle
+
+### Status
+- **Completed Issue**: GitHub Issue #15 (`Issue 10` in `milestones.md`)
+- **Git Branch**: `feat/issue-15-ecr-repository`
+
+### What Was Completed
+1. **Created ECR Module**: Added a reusable ECR module under `terraform/modules/ecr/` with `main.tf`, `variables.tf`, `outputs.tf`, and `versions.tf`.
+2. **Configured ECR Repository**: Provisioned the repository with mutable tag protection (`image_tag_mutability = "IMMUTABLE"`) and scan-on-push enabled.
+3. **ECR Lifecycle Policy**: Configured a lifecycle policy using `jsonencode()` to retain only the last 5 images, preventing storage costs from accumulating.
+4. **Dev Environment Integration**: Instantiated the ECR module in the dev environment (`terraform/environments/dev/main.tf`) and exposed the repository URL output (`ecr_repository_url`) in `outputs.tf`.
+5. **Validation and Linting**:
+   - Formatted all files with `terraform fmt -recursive`.
+   - Verified syntactic validity with `terraform validate`.
+   - Ran `terraform plan` showing 27 resources to add (including the 2 new ECR resources).
+
+### Next Steps
+- Implement **Milestone 2 Issue 11**: Configure IRSA service account for application pods.
+
+---
+
 ## Issue 14: Configure managed node group with t3.small SPOT for dev
 
 ### Status
