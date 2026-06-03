@@ -438,6 +438,7 @@ verdict/
 | 006 | No ALB at rest, on-demand ALB for demo | $18/mo savings |
 | 007 | CloudWatch 1-day retention in dev | ~80% log cost savings |
 | 008 | Nightly teardown workflow | Caps blast radius |
+| 009 | AWS Load Balancer Controller | $0 additional cost in dev |
 
 Full ADRs live in `docs/adrs/`.
 

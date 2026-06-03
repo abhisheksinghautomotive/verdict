@@ -2,7 +2,35 @@
 
 ---
 
+## Issue 12: Install AWS Load Balancer Controller via Helm (no Ingress by default)
+
+### Status
+- **Completed Issue**: GitHub Issue #17 (`Issue 12` in `milestones.md`)
+- **Git Branch**: `feat/issue-17-alb-controller`
+
+### What Was Completed
+1. **Downloaded AWS LB Controller IAM Policy**: Fetched the official AWS Load Balancer Controller policy from AWS and saved it to `terraform/modules/iam/aws_load_balancer_controller_policy.json`.
+2. **Created ALB Controller IRSA**: Configured a dedicated IAM role `aws-load-balancer-controller-irsa` and attached the policy. Scoped OIDC trust strictly to `system:serviceaccount:kube-system:aws-load-balancer-controller`.
+3. **EKS CA Data Output**: Exposed the `cluster_certificate_authority_data` output from the `eks` module to allow programmatic configuration of Kubernetes and Helm providers.
+4. **Configured Kubernetes & Helm Providers**: Initialized and configured the required `kubernetes` and `helm` providers in `terraform/environments/dev/` pointing to the EKS cluster.
+5. **Helm Release**: Added the `helm_release.aws_load_balancer_controller` resource targeting chart version `1.8.1` in the `kube-system` namespace. Set EKS node group dependency to ensure correct sequencing.
+6. **Application Helm Chart Ingress Config**: Added `ingress.enabled` settings to values files (`values.yaml`, `values-dev.yaml`, `values-prod.yaml`) and created the conditional template `templates/ingress.yaml`.
+7. **Documentation**:
+   - Created ADR `docs/adrs/009-aws-load-balancer-controller.md` documenting the decision.
+   - Updated the ADR list in `architecture.md`.
+8. **Validation and Linting**:
+   - Validated syntax with `terraform validate`.
+   - Formatted all code with `terraform fmt -recursive`.
+   - Verified Helm chart template correctness with `helm lint` and `helm template` (Ingress is disabled in dev, enabled in prod).
+   - Generated `terraform plan` showing 34 resources to be added (adding the 4 new ALB controller resources cleanly).
+
+### Next Steps
+- Implement **Milestone 2 Issue 13**: Build FastAPI application with `/run-test`, `/health`, `/results` endpoints.
+
+---
+
 ## Issue 11: Configure IRSA service account for application pods
+
 
 ### Status
 - **Completed Issue**: GitHub Issue #16 (`Issue 11` in `milestones.md`)
