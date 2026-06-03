@@ -2,3 +2,7 @@ serviceAccount:
   create: true
   name: "verdict-app"
   annotations: {}
+
+ingress:
+  enabled: false
+

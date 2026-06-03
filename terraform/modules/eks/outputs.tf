@@ -23,3 +23,8 @@ output "node_group_arn" {
   value       = aws_eks_node_group.this.arn
 }
 
+output "cluster_certificate_authority_data" {
+  description = "Base64 encoded certificate data required to communicate with the cluster"
+  value       = aws_eks_cluster.this.certificate_authority[0].data
+}
+

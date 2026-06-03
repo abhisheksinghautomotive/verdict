@@ -3,3 +3,7 @@ serviceAccount:
   name: "verdict-app"
   annotations:
     eks.amazonaws.com/role-arn: ""
+
+ingress:
+  enabled: false
+

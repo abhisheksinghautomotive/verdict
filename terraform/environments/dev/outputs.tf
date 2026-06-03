@@ -53,6 +53,12 @@ output "irsa_role_arn" {
   value       = module.iam.role_arn
 }
 
+output "alb_controller_role_arn" {
+  description = "The ARN of the IAM role for the AWS Load Balancer Controller (IRSA)"
+  value       = module.iam.alb_controller_role_arn
+}
+
+
 
 
 
