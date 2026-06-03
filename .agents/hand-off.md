@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 14: Configure managed node group with t3.small SPOT for dev
+
+### Status
+- **Completed Issue**: GitHub Issue #14 (`Issue 9` in `milestones.md`)
+- **Git Branch**: `feat/issue-14-eks-node-group`
+
+### What Was Completed
+1. **Configured Node Group Variables**: Parameterized node scaling (desired: 1, min: 1, max: 2), capacity type (default `SPOT`), and instance types (default `["t3.small"]`) in `terraform/modules/eks/variables.tf` with validation rules.
+2. **Worker Node IAM Role & Policy Attachments**: Created IAM role `aws_iam_role.node` with policies `AmazonEKSWorkerNodePolicy`, `AmazonEKS_CNI_Policy`, and `AmazonEC2ContainerRegistryReadOnly` attached.
+3. **EKS Managed Node Group**: Provisioned `aws_eks_node_group.this` inside EKS module pointing to the custom IAM role and placement subnet (first public subnet).
+4. **Outputs Configuration**: Exposed `node_group_arn` from EKS module.
+5. **Validation and Linting**:
+   - Formatted all files with `terraform fmt -recursive`.
+   - Verified syntactic validity with `terraform validate`.
+   - Verified execution plan via `terraform plan` showing 25 resources to add (incorporating the 5 EKS node/IAM resources).
+
+### Next Steps
+- Implement **Milestone 2 Issue 10**: Create ECR repository with scan-on-push and image lifecycle.
+
+---
+
 ## Issue 13: Write Terraform module for EKS cluster
 
 ### Status
