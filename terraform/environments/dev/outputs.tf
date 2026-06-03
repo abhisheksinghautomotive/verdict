@@ -23,3 +23,24 @@ output "alb_security_group_id" {
   value       = module.vpc.alb_security_group_id
 }
 
+output "cluster_endpoint" {
+  description = "The endpoint for the EKS Kubernetes API server"
+  value       = module.eks.cluster_endpoint
+}
+
+output "cluster_name" {
+  description = "The name of the EKS cluster"
+  value       = module.eks.cluster_name
+}
+
+output "oidc_provider_arn" {
+  description = "The ARN of the OIDC Provider for IRSA"
+  value       = module.eks.oidc_provider_arn
+}
+
+output "oidc_provider_url" {
+  description = "The OIDC Provider URL"
+  value       = module.eks.oidc_provider_url
+}
+
+

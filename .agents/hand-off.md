@@ -2,6 +2,28 @@
 
 ---
 
+## Issue 13: Write Terraform module for EKS cluster
+
+### Status
+- **Completed Issue**: GitHub Issue #13 (`Issue 8` in `milestones.md`)
+- **Git Branch**: `feat/issue-13-eks-module`
+
+### What Was Completed
+1. **Created EKS Module**: Added a reusable EKS module under `terraform/modules/eks/` with `main.tf`, `variables.tf`, `outputs.tf`, and `versions.tf`.
+2. **Cluster IAM Role & Policy**: Configured the cluster service role and attached the `AmazonEKSClusterPolicy` managed policy.
+3. **EKS Cluster Control Plane**: Provisioned the `aws_eks_cluster` resource in the configured subnets with private/public endpoint access.
+4. **OIDC Provider for IRSA**: Configured the TLS certificate data source and provisioned the `aws_iam_openid_connect_provider` pointing to the cluster's OIDC issuer URL.
+5. **VPC AZ Extension**: Updated the development environment to deploy public subnets across two AZs (`ap-south-1a` and `ap-south-1b`) as required by EKS HA Control Plane, while node placement remains pinned to the first AZ to maintain the cost-saving single-AZ model.
+6. **Validation and Linting**:
+   - Verified that the code adheres to style rules using `terraform fmt -recursive`.
+   - Verified syntactic and provider configuration validity using `terraform validate`.
+   - Run `terraform plan` to verify the execution plan, resulting in 20 resources planned to be added (16 VPC/networking and 4 EKS).
+
+### Next Steps
+- Implement **Milestone 2 Issue 9**: Configure managed node group with t3.small SPOT for dev.
+
+---
+
 ## Issue 12: Write Makefile with up / down / nuke / cost targets
 
 ### Status
