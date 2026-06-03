@@ -2,6 +2,25 @@
 
 ---
 
+## Issue 11: Validate full destroy and re-apply cycle works cleanly
+
+### Status
+- **Completed Issue**: GitHub Issue #11 (`Issue 7` in `milestones.md`)
+- **Git Branch**: `feat/issue-11-destroy-apply-validation`
+
+### What Was Completed
+1. **Executed Full Apply**: Verified successful provision of 14 VPC and networking resources in the `dev` environment on AWS (`ap-south-1`).
+2. **Executed Full Teardown**: Successfully destroyed all 14 resources using `terraform destroy`.
+3. **Orphan Verification**: Programmatically queried AWS using the AWS CLI and confirmed that 0 resources (VPCs, subnets, route tables, internet gateways, security groups) were left orphaned.
+4. **Verified Recreation Cycle**: Re-applied the Terraform configuration cleanly (another 14 resources added) and confirmed that a subsequent `terraform plan` returned a zero-diff state (`No changes`).
+5. **Documented Runbook**: Created the teardown runbook and documented the cycle validation results in [teardown-checklist.md](file:///Users/abhisheksingh/Desktop/verdict/docs/runbooks/teardown-checklist.md).
+6. **Clean State Check**: Ran `terraform destroy` at the end of validation to leave the AWS playground completely clean and cost-free.
+
+### Next Steps
+- Implement **Issue 7a**: Write Makefile with up / down / nuke / cost targets.
+
+---
+
 ## Issue 10: Package VPC as a clean Terraform module
 
 ### Status
