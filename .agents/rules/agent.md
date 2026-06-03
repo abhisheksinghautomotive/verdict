@@ -72,8 +72,10 @@ Every PR:
 7. Cost estimate if AWS resources change.
 8. Clean `terraform plan` in description for TF changes.
 9. Uses `.github/pull_request_template.md`.
+10. Redact/mask all sensitive metadata (AWS Account IDs, AWS ARNs, email addresses, UUIDs, private endpoints, etc.) from PR titles, descriptions, and comments prior to submission.
 
 Diff > 400 lines → stop and split.
+
 
 ## 7. Issue-First
 
