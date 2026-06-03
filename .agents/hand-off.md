@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 10: Package VPC as a clean Terraform module
+
+### Status
+- **Completed Issue**: GitHub Issue #10 (`Issue 6` in `milestones.md`)
+- **Git Branch**: `feat/issue-10-vpc-module`
+
+### What Was Completed
+1. **Module Separation Verified**: Verified that all VPC infrastructure resources (VPC, subnets, IGW, NAT GW, EIP, route tables, and associations) are fully contained within the reusable `terraform/modules/vpc/` module.
+2. **Security Groups Included**: Confirmed that the node and ALB security groups, as well as their rules, are located within the VPC module (`terraform/modules/vpc/security_groups.tf`).
+3. **Module Inputs & Outputs Configured**: Verified that the VPC module variables (in `variables.tf`) have descriptions, types, and defaults, and the five required outputs (`vpc_id`, `public_subnet_ids`, `private_subnet_ids`, `node_security_group_id`, `alb_security_group_id`) are correctly exposed.
+4. **Dev Environment Integration**: Verified that the dev environment (`terraform/environments/dev/main.tf`) consumes the VPC module via a single `module "vpc"` block referencing `../../modules/vpc`.
+5. **Validation & Planning**:
+   - Validated syntax using `terraform validate` inside `terraform/environments/dev/`.
+   - Confirmed code is fully formatted using `terraform fmt -recursive`.
+   - Verified that `terraform plan` successfully plans the creation of all 14 dev-footprint resources.
+
+### Next Steps
+- Implement **Issue 7**: Validate full destroy and re-apply cycle.
+
+---
+
 ## Issue 9: Define security groups for EKS nodes and ALB
 
 ### Status
