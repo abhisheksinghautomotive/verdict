@@ -2,6 +2,30 @@
 
 ---
 
+## Issue 11: Configure IRSA service account for application pods
+
+### Status
+- **Completed Issue**: GitHub Issue #16 (`Issue 11` in `milestones.md`)
+- **Git Branch**: `feat/issue-16-irsa-service-account`
+
+### What Was Completed
+1. **Created IAM Module**: Added a reusable IAM/IRSA module under `terraform/modules/iam/` with `irsa.tf`, `variables.tf`, `outputs.tf`, and `versions.tf`.
+2. **Configured IRSA Role**: Provisioned `aws_iam_role.verdict_app` (`verdict-app-irsa`) with trust policy referencing the OIDC provider URL and ARN and restricting assumption strictly to `system:serviceaccount:verdict:verdict-app`.
+3. **Configured Pod IAM Policy**: Created `aws_iam_policy.verdict_app` granting `secretsmanager:GetSecretValue` on dynamic verdict secret ARNs, `ecr:GetAuthorizationToken` on resource `*`, and `ecr:BatchGetImage` on the specific ECR repository.
+4. **Dev Environment Integration**: Instantiated the IAM module in the dev environment (`terraform/environments/dev/main.tf`) and exposed the dynamic role ARN output (`irsa_role_arn`) in `outputs.tf`.
+5. **Helm Chart Service Account**: Initialized the Helm chart metadata (`Chart.yaml`), base settings (`values.yaml`, `values-dev.yaml`, `values-prod.yaml`), and created the dynamic service account manifest `templates/serviceaccount.yaml` annotated with `eks.amazonaws.com/role-arn`.
+6. **Documentation**: Added ADR `docs/adrs/003-irsa-service-account.md` documenting the architectural decision.
+7. **Validation and Linting**:
+   - Formatted all files with `terraform fmt -recursive`.
+   - Verified syntactic validity with `terraform validate`.
+   - Verified Helm chart template correctness with `helm lint`.
+   - Verified Terraform plan showing 30 resources to add (adding the 3 IAM/IRSA resources cleanly).
+
+### Next Steps
+- Implement **Milestone 2 Issue 12**: Install AWS Load Balancer Controller via Helm (no Ingress by default).
+
+---
+
 ## Issue 10: Create ECR repository with scan-on-push and image lifecycle
 
 ### Status
