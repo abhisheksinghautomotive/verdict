@@ -125,8 +125,8 @@ verdict/
 
 | Milestone | Due | Status |
 |---|---|---|
-| 1. Foundation Infrastructure | Week 2 | In progress |
-| 2. Container Platform | Week 4 | Not started |
+| 1. Foundation Infrastructure | Week 2 | Completed |
+| 2. Container Platform | Week 4 | In progress |
 | 3. CI/CD Pipeline | Week 6 | Not started |
 | 4. Observability and Security | Week 8 | Not started |
 

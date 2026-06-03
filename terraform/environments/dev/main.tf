@@ -28,3 +28,11 @@ module "eks" {
   common_tags            = local.common_tags
 }
 
+module "ecr" {
+  source = "../../modules/ecr"
+
+  repository_name = "verdict-dev"
+  common_tags     = local.common_tags
+}
+
+
