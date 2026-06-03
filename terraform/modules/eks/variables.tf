@@ -54,3 +54,59 @@ variable "common_tags" {
   description = "Common tags to apply to all resources"
   default     = {}
 }
+
+variable "node_desired_size" {
+  type        = number
+  description = "Desired number of worker nodes"
+  default     = 1
+
+  validation {
+    condition     = var.node_desired_size >= 1
+    error_message = "The node_desired_size must be at least 1."
+  }
+}
+
+variable "node_min_size" {
+  type        = number
+  description = "Minimum number of worker nodes"
+  default     = 1
+
+  validation {
+    condition     = var.node_min_size >= 1
+    error_message = "The node_min_size must be at least 1."
+  }
+}
+
+variable "node_max_size" {
+  type        = number
+  description = "Maximum number of worker nodes"
+  default     = 2
+
+  validation {
+    condition     = var.node_max_size >= 1
+    error_message = "The node_max_size must be at least 1."
+  }
+}
+
+variable "node_instance_types" {
+  type        = list(string)
+  description = "List of instance types associated with the EKS Node Group"
+  default     = ["t3.small"]
+
+  validation {
+    condition     = length(var.node_instance_types) >= 1
+    error_message = "At least one instance type must be provided for the EKS Node Group."
+  }
+}
+
+variable "node_capacity_type" {
+  type        = string
+  description = "Type of capacity associated with the EKS Node Group (SPOT or ON_DEMAND)"
+  default     = "SPOT"
+
+  validation {
+    condition     = contains(["SPOT", "ON_DEMAND"], var.node_capacity_type)
+    error_message = "The node_capacity_type must be either 'SPOT' or 'ON_DEMAND'."
+  }
+}
+

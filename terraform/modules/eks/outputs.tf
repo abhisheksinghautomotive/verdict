@@ -17,3 +17,9 @@ output "oidc_provider_url" {
   description = "The OIDC Provider URL"
   value       = aws_eks_cluster.this.identity[0].oidc[0].issuer
 }
+
+output "node_group_arn" {
+  description = "The ARN of the EKS Managed Node Group"
+  value       = aws_eks_node_group.this.arn
+}
+
