@@ -2,6 +2,26 @@
 
 ---
 
+## Issue 12: Write Makefile with up / down / nuke / cost targets
+
+### Status
+- **Completed Issue**: GitHub Issue #12 (`Issue 7a` in `milestones.md`)
+- **Git Branch**: `feat/issue-12-makefile`
+
+### What Was Completed
+1. **Created Root Makefile**: Added a root-level `Makefile` with targets `bootstrap`, `up`, `down`, `nuke`, `cost`, and `help`.
+2. **Interactive Bootstrap Support**: Configured `bootstrap` to pass the optional `ALERT_EMAIL` variable to avoid prompting in non-interactive setups.
+3. **Robust Environment Hooks**: Configured `up` and `down` to perform Terraform operations and conditionally run Helm commands only if the Helm chart directories exist, ensuring smooth progression through future milestones.
+4. **Clean Nuke Confirmation**: Configured `nuke` to prompt for confirmation and supply a dummy `alert_email` variable to allow non-interactive destroy of bootstrap resources.
+5. **Dynamic Cost Queries**: Implemented portable date calculations via Python to fetch current-month Cost Explorer metrics in the `cost` target.
+6. **Documentation**: Created implementation plan, task list, and walkthrough tracking artifacts.
+
+### Next Steps
+- Implement **Milestone 2 Issue 8**: Write Terraform module for EKS cluster.
+
+---
+
+
 ## Issue 11: Validate full destroy and re-apply cycle works cleanly
 
 ### Status
