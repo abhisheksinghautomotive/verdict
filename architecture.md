@@ -349,6 +349,9 @@ stateDiagram-v2
 | DynamoDB (tflock) | on-demand | same | `bootstrap/` |
 | AWS Budgets | 4 thresholds | same | `modules/budget` |
 | VPC Endpoints | OFF | ON (ECR, STS, Secrets) | `modules/vpc` (var-gated) |
+| CloudWatch Log Groups | 1-day retention | 7-day retention | `environments/dev/cloudwatch.tf` |
+| EKS Addons | CloudWatch Observability | same | `environments/dev/cloudwatch.tf` |
+
 
 ### 8.2 Application
 
