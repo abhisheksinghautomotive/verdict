@@ -1,5 +1,7 @@
 data "aws_caller_identity" "current" {}
 
+# Verification check for Deploy Infrastructure CI/CD pipeline
+
 locals {
   common_tags = {
     Project     = "verdict"
