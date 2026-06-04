@@ -2,6 +2,26 @@
 
 ---
 
+## Issue 14: Write multi-stage Dockerfile with non-root user
+
+### Status
+- **Completed Issue**: GitHub Issue #19 (`Issue 14` in `milestones.md`)
+- **Git Branch**: `feat/issue-19-dockerfile`
+
+### What Was Completed
+1. **Updated Requirements**: Added `pytest` and `httpx` to `app/requirements.txt` to ensure both the test execution engine and FastAPI's `TestClient` function correctly at runtime inside the container.
+2. **Added Dockerignore**: Created `app/.dockerignore` to prevent caching directory bloat and local virtual environments from being loaded into the Docker builder context.
+3. **Hardened Multi-Stage Dockerfile**: Created `app/Dockerfile` with a clean `python:3.12-slim` base, a builder stage to isolate compilation tools, and a runtime stage featuring `tini` as PID 1, a custom `appuser` (UID 10001) for non-root execution, and strict directory/file ownership.
+4. **Validation and Sizing**:
+   - Verified that the final image size is ~283 MB (base python-slim is ~205 MB, with our libraries contributing only ~30 MB).
+   - Ran all tests inside the container under read-only root FS and normal configurations, confirming 100% test completion (7/7 tests passed).
+   - Inspected user permissions (correctly running as UID 10001).
+
+### Next Steps
+- Implement **Milestone 2 Issue 15**: Write Helm chart with dev and prod values files.
+
+---
+
 ## Issue 13: Build FastAPI application with /run-test, /health, /results endpoints
 
 ### Status

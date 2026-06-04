@@ -1,0 +1,20 @@
+# Ignore python compiled artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Ignore cache directories
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Ignore local configuration and dockerfiles
+Dockerfile
+.dockerignore
