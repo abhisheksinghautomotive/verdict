@@ -2,6 +2,25 @@
 
 ---
 
+## Issue 25a: Write nightly-teardown.yml schedule workflow as cost insurance
+
+### Status
+- **Completed Issue**: GitHub Issue #31 (`Issue 25a` in `milestones.md`)
+- **Git Branch**: `feat/issue-31-nightly-teardown`
+
+### What Was Completed
+1. **Created Scheduled Workflow**: Added `.github/workflows/nightly-teardown.yml` triggered on cron `30 17 * * *` (17:30 UTC = 23:00 IST) and `workflow_dispatch`.
+2. **Added EKS Check & Destroy Step**: Configured steps to assume the OIDC role, check if EKS is running via `aws eks describe-cluster --name verdict-dev`, and run `terraform destroy -target=module.eks -auto-approve` if it exists.
+3. **Prevented Command Injection**: Passed variables (`AWS_REGION`) into shell run blocks using step environment variables rather than direct `${{ }}` template interpolation.
+4. **Created ADR 008**: Added `docs/adrs/008-nightly-teardown.md` documenting context, decision, consequences, and cost impacts.
+5. **Verified Workflow syntax**: Successfully validated using `actionlint`.
+6. **Completed Milestone 3**: Updated the status table in `README.md` to mark Milestone 3 (CI/CD Pipeline) as completed.
+
+### Next Steps
+- Verify nightly-teardown workflow execution via GitHub Actions interface once merged.
+
+---
+
 ## Issue 25: Test full PR gating flow end to end
 
 ### Status
