@@ -239,7 +239,7 @@ flowchart LR
     },
     "StringLike": {
       "token.actions.githubusercontent.com:sub":
-        "repo:abhishek-singh/verdict:*"
+        "repo:abhisheksinghautomotive/verdict:*"
     }
   }
 }
