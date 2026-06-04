@@ -74,3 +74,39 @@ resource "aws_iam_openid_connect_provider" "github" {
   tags = local.common_tags
 }
 
+resource "aws_iam_role" "gha_verdict_deploy" {
+  name = "gha-verdict-deploy"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:abhisheksinghautomotive/verdict:*"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+# The deployment role requires AdministratorAccess as it is used by the CI/CD pipeline
+# to provision and destroy low-level infrastructure resources (VPC, EKS clusters, IAM roles, Security Groups, etc.) via Terraform.
+# The risk is mitigated by scoping assumption strictly to the OIDC identity provider matching the specific GitHub repo.
+resource "aws_iam_role_policy_attachment" "gha_verdict_deploy_admin" {
+  role       = aws_iam_role.gha_verdict_deploy.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+

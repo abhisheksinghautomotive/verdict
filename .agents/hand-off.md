@@ -2,6 +2,26 @@
 
 ---
 
+## Issue 18: Create IAM role for GitHub Actions with scoped trust policy
+
+### Status
+- **Completed Issue**: GitHub Issue #23 (`Issue 18` in `milestones.md`)
+- **Git Branch**: `feat/issue-23-gha-iam-role`
+
+### What Was Completed
+1. **OIDC IAM Role**: Added `aws_iam_role.gha_verdict_deploy` in `terraform/bootstrap/main.tf` allowing assumption via OIDC from GitHub Actions, restricted to repository `abhisheksinghautomotive/verdict`.
+2. **Justified Permissions**: Attached the `AdministratorAccess` policy to the deployment role, documented with code-level comments justifying the broad wildcard policy (required for provisioning networking and compute resources via the infrastructure deployment workflow).
+3. **Exposed Outputs**: Configured `gha_role_arn` output in `terraform/bootstrap/outputs.tf`.
+4. **EKS Access Entry**: Configured `aws_eks_access_entry` and `aws_eks_access_policy_association` in `terraform/environments/dev/main.tf` to map the deployment role to EKS administration (`AmazonEKSClusterAdminPolicy`).
+5. **EKS Access Mode**: Explicitly added the `access_config` block setting the authentication mode to `API_AND_CONFIG_MAP` in `terraform/modules/eks/main.tf` to support EKS Access Entries.
+6. **Documentation**: Created ADR `docs/adrs/002-oidc-no-static-aws-credentials.md` and updated `architecture.md`.
+7. **Validation**: Formatted recursively and verified that `terraform validate` succeeds in both bootstrap and dev environments. Confirmed planned resource additions via `terraform plan`.
+
+### Next Steps
+- Implement **Milestone 3 Issue 19**: Write `detect_changed_tests.py` using `git diff`.
+
+---
+
 ## Issue 17: Configure GitHub OIDC provider in AWS IAM (in Milestone 1 bootstrap)
 
 ### Status
