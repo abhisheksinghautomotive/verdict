@@ -2,6 +2,29 @@
 
 ---
 
+## Issue 15: Write Helm chart with dev and prod values files
+
+### Status
+- **Completed Issue**: GitHub Issue #20 (`Issue 15` in `milestones.md`)
+- **Git Branch**: `feat/issue-20-helm-values`
+
+### What Was Completed
+1. **Created Deployment Template**: Configured `helm/verdict-app/templates/deployment.yaml` with a robust liveness and readiness probe, correct container and pod securityContext settings matching Issue 30, and `/tmp` mounted to an `emptyDir` volume to support read-only root filesystems.
+2. **Created Service Template**: Configured `helm/verdict-app/templates/service.yaml` as a `ClusterIP` service exposing port 80 and mapping to targetPort 8080 (the FastAPI application port).
+3. **Created HPA Template**: Configured `helm/verdict-app/templates/hpa.yaml` dynamically rendering HorizontalPodAutoscaler resources based on CPU utilization.
+4. **Defined Values Overrides**:
+   - `values.yaml` - Hardened defaults (1 replica, HPA disabled, Ingress disabled, CPU/Memory resource constraints).
+   - `values-dev.yaml` - Dev mode footprint (1 replica, HPA/Ingress disabled, minimal resources).
+   - `values-prod.yaml` - Prod mode footprint (2 replicas, HPA enabled, Ingress enabled with ALB class, higher resource requests/limits).
+5. **Validation and Linting**:
+   - Validated Helm chart successfully using `helm lint` (0 errors).
+   - Confirmed development templates do not render Ingress or HPA, and production templates render all components cleanly with 2 replicas using `helm template`.
+
+### Next Steps
+- Implement **Milestone 2 Issue 16**: Deploy application to EKS and verify access via port-forward.
+
+---
+
 ## Issue 14: Write multi-stage Dockerfile with non-root user
 
 ### Status
