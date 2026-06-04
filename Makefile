@@ -29,12 +29,27 @@ bootstrap:
 up:
 	cd terraform/environments/dev && terraform init -backend-config=backend.tfvars && terraform apply -auto-approve
 	@if [ -d "helm/verdict-app" ]; then \
-		echo "Installing Helm chart..."; \
-		aws eks update-kubeconfig --region ap-south-1 --name verdict-dev; \
-		helm upgrade --install verdict-app ./helm/verdict-app -n verdict --create-namespace -f helm/verdict-app/values-dev.yaml; \
+		echo "Authenticating to ECR..."; \
+		ECR_URL=$$(cd terraform/environments/dev && terraform output -raw ecr_repository_url) && \
+		aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $${ECR_URL} && \
+		echo "Building Docker image..." && \
+		docker build --platform linux/amd64 -t $${ECR_URL}:dev app/ && \
+		echo "Pushing Docker image to ECR..." && \
+		docker push $${ECR_URL}:dev && \
+		echo "Installing Helm chart..." && \
+		aws eks update-kubeconfig --region ap-south-1 --name verdict-dev && \
+		IRSA_ARN=$$(cd terraform/environments/dev && terraform output -raw irsa_role_arn) && \
+		helm upgrade --install verdict-app ./helm/verdict-app \
+			-n verdict \
+			--create-namespace \
+			-f helm/verdict-app/values-dev.yaml \
+			--set image.repository=$${ECR_URL} \
+			--set image.tag=dev \
+			--set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$${IRSA_ARN}; \
 	else \
 		echo "Helm chart directory not found. Skipping Helm installation."; \
 	fi
+
 
 down:
 	@if which helm >/dev/null 2>&1 && helm list -n verdict 2>/dev/null | grep -q verdict-app; then \
