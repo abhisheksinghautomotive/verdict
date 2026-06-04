@@ -140,6 +140,13 @@ def main(argv: Sequence[str]) -> None:
     # Filter files matching app/tests/test_*.py
     changed_tests = fnmatch.filter(changed_files, "app/tests/test_*.py")
 
+    # Exclude GHA workflow script unit tests from remote EKS test runner execution
+    exclude_tests = {
+        "app/tests/test_detect_changed_tests.py",
+        "app/tests/test_run_tests.py",
+    }
+    changed_tests = [t for t in changed_tests if t not in exclude_tests]
+
     logger.info("Total changed files: %d", len(changed_files))
     logger.info("Detected changed tests: %s", changed_tests)
 

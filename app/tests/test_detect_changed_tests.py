@@ -115,6 +115,8 @@ def test_main_with_github_output(
         "app/tests/test_main.py",
         "app/main.py",
         "app/tests/test_other.py",
+        "app/tests/test_detect_changed_tests.py",
+        "app/tests/test_run_tests.py",
     ]
     output_file = tmp_path / "output.txt"
 
