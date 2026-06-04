@@ -2,6 +2,23 @@
 
 ---
 
+## Issue 19: Write detect_changed_tests.py using git diff
+
+### Status
+- **Completed Issue**: GitHub Issue #24 (`Issue 19` in `milestones.md`)
+- **Git Branch**: `feat/issue-24-detect-changed-tests`
+
+### What Was Completed
+1. **Added Test Detection Script**: Created `.github/scripts/detect_changed_tests.py` to execute `git diff --name-only {base}...{head}` and filter changed files matching `app/tests/test_*.py` using `fnmatch.filter`.
+2. **Standardized Logging**: Structured logging output using a custom `JsonFormatter` class to comply with the project's JSON logging requirements without introducing external dependencies.
+3. **Wrote Unit Tests**: Implemented comprehensive tests in `app/tests/test_detect_changed_tests.py` verifying diff behavior, argument parsing, log formatting, and output file writes, yielding 98% statement coverage.
+4. **Validation**: Formatted, linted, and type-checked code to ensure 100% compliance with PEP 8 (Ruff) and strict type safety (mypy).
+
+### Next Steps
+- Implement **Milestone 3 Issue 20**: Write pr-test-gate.yml workflow with OIDC authentication.
+
+---
+
 ## Issue 17: Configure GitHub OIDC provider in AWS IAM (in Milestone 1 bootstrap)
 
 ### Status
