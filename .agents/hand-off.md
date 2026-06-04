@@ -2,6 +2,23 @@
 
 ---
 
+## Issue 22: Add PR comment step with pass/fail results
+
+### Status
+- **Completed Issue**: GitHub Issue #27 (`Issue 22` in `milestones.md`)
+- **Git Branch**: `feat/issue-27-pr-comment`
+
+### What Was Completed
+1. **Created PR Comment Script**: Developed `.github/scripts/post_pr_comment.py` using Python's standard library (`urllib.request`). It parses `test_results.json` if available, formats test execution stats and failing logs as a rich markdown table and `<details>` dropdowns, fetches previous workflow comments to update them (maintaining a single sticky comment), and posts a new one if not found.
+2. **Created Unit Tests**: Created `app/tests/test_post_pr_comment.py` containing 21 tests mapping successful/failed parsing, api interactions, mocks, and fallback workflows, achieving 100% test coverage.
+3. **Modified GHA Workflow**: Updated `.github/workflows/pr-test-gate.yml` to include a `Post PR comment` step that runs `if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'`. It parses and posts comment metrics.
+4. **Validation**: Ran all quality tools (`ruff check`, `ruff format`, `mypy --strict`, `actionlint`), and executed `pytest` confirming all 51 Python tests in the project pass successfully with 99% overall code coverage.
+
+### Next Steps
+- Implement **Milestone 3 Issue 23**: Configure branch protection to require pr-test-gate status check.
+
+---
+
 ## Issue 21: Implement test execution against FastAPI app in workflow
 
 ### Status
