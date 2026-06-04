@@ -2,6 +2,34 @@
 
 ---
 
+## Issue 13: Build FastAPI application with /run-test, /health, /results endpoints
+
+### Status
+- **Completed Issue**: GitHub Issue #18 (`Issue 13` in `milestones.md`)
+- **Git Branch**: `feat/issue-18-fastapi-app`
+
+### What Was Completed
+1. **FastAPI Application Setup**: Created `app/main.py` with standard FastAPI app instance serving three main routes:
+   - `POST /run-test`: Accepts `{"test_file": "..."}` and runs it via `pytest` in `subprocess.run` (measuring execution duration).
+   - `GET /health`: Liveness probe returning `{"status": "ok"}`.
+   - `GET /results`: Returns in-memory test histories.
+2. **Robust Path Resolution**: Implemented workspace and local path resolution logic in `app/main.py` to allow the test runner to cleanly run tests from both root and subdirectories.
+3. **Strict Python Code Quality**:
+   - Pinned dependencies in `app/requirements.txt` (`fastapi`, `uvicorn`, `pydantic`) and `app/requirements-dev.txt` (`pytest`, `pytest-cov`, `httpx`, `ruff`, `mypy`).
+   - Defined `app` and `app/tests` as standard python packages by creating `__init__.py` files.
+   - Fully typed the code to pass `mypy --strict` with zero errors.
+   - Adhered to PEP 8 / Ruff style checks.
+4. **Unit and Endpoint Testing**:
+   - Wrote comprehensive unit tests in `app/tests/test_main.py` utilizing the FastAPI `TestClient` and subprocess mocking.
+   - Achieved 97% overall test coverage (93% coverage on `app/main.py`), well above the required 70% threshold.
+5. **Manual Verification**:
+   - Spun up local `uvicorn` server and manually hit `/health`, `/run-test`, and `/results` via `curl` to verify end-to-end correctness.
+
+### Next Steps
+- Implement **Milestone 2 Issue 14**: Write multi-stage Dockerfile with non-root user.
+
+---
+
 ## Issue 12: Install AWS Load Balancer Controller via Helm (no Ingress by default)
 
 ### Status
