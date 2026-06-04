@@ -240,6 +240,9 @@ When done:
 - [ ] No uncommitted secrets or local configs.
 - [ ] `make cost` checked — spend on track.
 
+## 19a. Active Resource Warning Rule
+At the end of every message, query AWS using the CLI to check if the EKS cluster or ECR repositories are active. If they are, print a clear warning notifying the user that AWS resources are active and reminding them to run `make down` before ending their session.
+
 ## 20. Hand-Off document for each chat session
 Each chat session will be based on only 1 issue, no other issues or other tasks will be done in the chat. after the issue is succesfully complete update the .agents/hand-off.md with all the information related to the task
 

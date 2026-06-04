@@ -108,6 +108,19 @@ jobs:
           # shellcheck disable=SC2086
           python .github/scripts/run_tests.py $CHANGED_TESTS
 
+      - name: Post PR comment
+        if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          python .github/scripts/post_pr_comment.py --results-file test_results.json --status "$JOB_STATUS"
+
       - name: Cleanup Helm deployment
         if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'
         run: |
