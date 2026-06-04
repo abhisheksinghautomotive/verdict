@@ -8,3 +8,8 @@ output "alb_controller_role_arn" {
   value       = aws_iam_role.aws_load_balancer_controller.arn
 }
 
+output "cloudwatch_observability_role_arn" {
+  description = "The ARN of the CloudWatch Observability IAM role (IRSA)"
+  value       = aws_iam_role.cloudwatch_observability.arn
+}
+

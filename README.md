@@ -128,7 +128,7 @@ verdict/
 | 1. Foundation Infrastructure | Week 2 | Completed |
 | 2. Container Platform | Week 4 | Completed |
 | 3. CI/CD Pipeline | Week 6 | Completed |
-| 4. Observability and Security | Week 8 | Not started |
+| 4. Observability and Security | Week 8 | In progress |
 
 ---
 

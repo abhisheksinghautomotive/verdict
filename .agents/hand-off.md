@@ -2,6 +2,26 @@
 
 ---
 
+## Issue 26: Enable CloudWatch Container Insights with 1-day log retention in dev
+
+### Status
+- **Completed Issue**: GitHub Issue #32 (`Issue 26` in `milestones.md`)
+- **Git Branch**: `feat/issue-32-container-insights`
+
+### What Was Completed
+1. **OIDC/IRSA Role Creation**: Created `aws_iam_role.cloudwatch_observability` and trust policy for EKS service account `cloudwatch-agent` in the `amazon-cloudwatch` namespace. Attached `CloudWatchAgentServerPolicy` managed policy.
+2. **Log Group Provisioning**: Pre-created log groups `/aws/containerinsights/verdict-dev/application`, `dataplane`, `host`, and `performance` with `retention_in_days = 1` to strictly enforce budget limits.
+3. **EKS Add-On Installation**: Provisioned the EKS addon `amazon-cloudwatch-observability` with version `v6.2.0-eksbuild.1` and linked the IRSA role.
+4. **VPC Module Refactoring**: Refactored the private route table association in `terraform/modules/vpc/main.tf` to avoid using resources in `for_each` keys (resolving a known Terraform import error).
+5. **Created ADR 007**: Documented the retention and addon architecture in `docs/adrs/007-cloudwatch-retention.md`.
+6. **Documentation Updates**: Added CloudWatch logs and addons to the Component Inventory table in `architecture.md` and set Milestone 4 to "In progress" in `README.md`.
+7. **Verification**: Confirmed metrics/logs daemonset pods are `Running` and log group retention is successfully set to `1` day.
+
+### Next Steps
+- Implement **Milestone 4 Issue 27**: Implement structured JSON logging in FastAPI.
+
+---
+
 ## Issue 25a: Write nightly-teardown.yml schedule workflow as cost insurance
 
 ### Status
