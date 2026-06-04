@@ -18,3 +18,8 @@ output "github_oidc_provider_arn" {
   description = "The ARN of the GitHub OIDC provider"
 }
 
+output "gha_role_arn" {
+  value       = aws_iam_role.gha_verdict_deploy.arn
+  description = "The ARN of the IAM role for GitHub Actions deployment"
+}
+
