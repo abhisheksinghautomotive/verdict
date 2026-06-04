@@ -2,6 +2,28 @@
 
 ---
 
+## Issue 20: Write pr-test-gate.yml workflow with OIDC authentication
+
+### Status
+- **Completed Issue**: GitHub Issue #25 (`Issue 20` in `milestones.md`)
+- **Git Branch**: `feat/issue-25-pr-test-gate`
+
+### What Was Completed
+1. **Provisioned OIDC Role**: Applied `terraform/bootstrap` stack to create the `gha-verdict-deploy` IAM role that allows GitHub Actions to assume the role via OIDC.
+2. **Updated Repository Variable**: Configured the GitHub Actions variable `AWS_ROLE_ARN` with the provisioned IAM role ARN.
+3. **Created GHA Workflow**: Created `.github/workflows/pr-test-gate.yml` with:
+   - Job-level scoped permissions (`id-token: write`, `contents: read`, `pull-requests: write`).
+   - GitHub Actions pinned to full commit SHAs (`actions/checkout` and `aws-actions/configure-aws-credentials`).
+   - OIDC integration step that uses `vars.AWS_ROLE_ARN` and `vars.AWS_REGION`.
+   - Verification step to execute `aws sts get-caller-identity`.
+4. **Tested End-to-End**: Opened PR #62 and verified that OIDC credentials are successfully assumed on GitHub Actions runner.
+
+### Next Steps
+- Implement **Milestone 3 Issue 21**: Implement test execution against FastAPI app in workflow.
+
+---
+
+
 ## Issue 19: Write detect_changed_tests.py using git diff
 
 ### Status
