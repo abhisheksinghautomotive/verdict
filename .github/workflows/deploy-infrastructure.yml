@@ -1,0 +1,120 @@
+name: Deploy Infrastructure
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+
+# Minimal top-level permissions to enforce secure-by-default behavior
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: "3.12"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a17056637e6f85116743128b9b8287713d # v3.1.2
+        with:
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/environments/dev
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          terraform init \
+            -backend-config="bucket=verdict-tfstate-${AWS_ACCOUNT_ID}" \
+            -backend-config="dynamodb_table=verdict-tflock" \
+            -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Plan
+        working-directory: terraform/environments/dev
+        run: |
+          terraform plan -no-color -out=tfplan > tfplan.txt
+
+      - name: Post Terraform Plan PR comment
+        if: always()
+        working-directory: terraform/environments/dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: |
+          python ../../../.github/scripts/post_tf_plan.py --plan-file tfplan.txt
+
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a17056637e6f85116743128b9b8287713d # v3.1.2
+        with:
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/environments/dev
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          terraform init \
+            -backend-config="bucket=verdict-tfstate-${AWS_ACCOUNT_ID}" \
+            -backend-config="dynamodb_table=verdict-tflock" \
+            -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Apply
+        working-directory: terraform/environments/dev
+        run: |
+          terraform apply -auto-approve -input=false
