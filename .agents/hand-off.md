@@ -2,6 +2,23 @@
 
 ---
 
+## Issue 23: Configure branch protection to require pr-test-gate status check
+
+### Status
+- **Completed Issue**: GitHub Issue #28 (`Issue 23` in `milestones.md`)
+- **Git Branch**: N/A (configured directly on GitHub repository settings)
+
+### What Was Completed
+1. **Verified Ruleset Configuration**: Audited the repository rulesets and verified the presence of the `protect-main` ruleset (ID `16827170`) targeting the default branch `main`.
+2. **Enforced Status Check**: Confirmed that `PR Test Gate` (GitHub Actions integration ID `15368`) is required to pass before merging.
+3. **Enforced Up-To-Date Branches**: Verified that `strict_required_status_checks_policy` is configured to `true` (enforcing "Require branches to be up to date before merging").
+4. **Disabled Admin Bypass**: Verified `bypass_actors` is empty and `current_user_can_bypass` is `never`, ensuring that repository admins are subject to the same merge restrictions.
+
+### Next Steps
+- Implement **Milestone 3 Issue 24**: Write `deploy-infrastructure.yml` for Terraform plan on PR and apply on merge.
+
+---
+
 ## Issue 22: Add PR comment step with pass/fail results
 
 ### Status

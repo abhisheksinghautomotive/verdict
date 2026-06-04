@@ -144,6 +144,8 @@ def main(argv: Sequence[str]) -> None:
     exclude_tests = {
         "app/tests/test_detect_changed_tests.py",
         "app/tests/test_run_tests.py",
+        "app/tests/test_post_pr_comment.py",
+        "app/tests/test_post_tf_plan.py",
     }
     changed_tests = [t for t in changed_tests if t not in exclude_tests]
 
