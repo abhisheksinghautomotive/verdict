@@ -2,6 +2,24 @@
 
 ---
 
+## Issue 17: Configure GitHub OIDC provider in AWS IAM (in Milestone 1 bootstrap)
+
+### Status
+- **Completed Issue**: GitHub Issue #22 (`Issue 17` in `milestones.md`)
+- **Git Branch**: `feat/issue-22-github-oidc-provider`
+
+### What Was Completed
+1. **Declared TLS Provider**: Added the `hashicorp/tls` provider to `required_providers` in `terraform/bootstrap/versions.tf`.
+2. **Added GitHub OIDC data source and resource**: Configured `data "tls_certificate" "github"` and the `aws_iam_openid_connect_provider.github` resource in `terraform/bootstrap/main.tf` targeting OIDC URL `https://token.actions.githubusercontent.com` and audience `sts.amazonaws.com`.
+3. **Exposed Outputs**: Configured `github_oidc_provider_arn` output in `terraform/bootstrap/outputs.tf`.
+4. **Validation and Application**: Formatted all configurations with `terraform fmt -recursive`, successfully validated via `terraform validate`, and applied the bootstrap stack using `terraform apply -auto-approve`.
+5. **Zero-Drift Check**: Verified zero-drift state using `terraform plan`.
+
+### Next Steps
+- Implement **Milestone 3 Issue 18**: Create IAM role for GitHub Actions with scoped trust policy.
+
+---
+
 ## Issue 16: Deploy application to EKS and verify access via port-forward
 
 ### Status
