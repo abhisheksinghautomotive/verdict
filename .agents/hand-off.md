@@ -2,6 +2,25 @@
 
 ---
 
+## Issue 16: Deploy application to EKS and verify access via port-forward
+
+### Status
+- **Completed Issue**: GitHub Issue #21 (`Issue 16` in `milestones.md`)
+- **Git Branch**: `feat/issue-21-deploy-app-eks`
+
+### What Was Completed
+1. **Makefile Automation**: Modified the `up` target to authenticate to ECR, build the Docker image targeting `--platform linux/amd64` (preventing platform mismatch failures on `t3.small` worker nodes), push it to ECR, and run `helm upgrade` passing the dynamic repo URL, tag `dev`, and IRSA annotation.
+2. **ECR Immutable Tags Handling**: Programmatically cleared conflicting `dev` tags via the AWS CLI to satisfy ECR tag immutability settings.
+3. **Deployment Verification**: Confirmed that the EKS pod successfully pulls the amd64 image and transitions to `Running` state.
+4. **Port-Forward Validation**: Verified service routing locally by port-forwarding to local port 8080 and checking the `/health` and `/results` endpoints.
+5. **ALB Demo Routing**: Deployed the production values profile (`values-prod.yaml`) to verify that the AWS Load Balancer Controller successfully provisions and configures the Application Load Balancer, and confirmed that public health checks via the ALB DNS route correctly.
+6. **Teardown Execution**: Initiated a full teardown using `make down` to avoid unwanted cloud spend.
+
+### Next Steps
+- Implement **Milestone 3 Issue 18**: Create IAM role for GitHub Actions with scoped trust policy (since Issue 17 OIDC is already configured in Milestone 1 bootstrap).
+
+---
+
 ## Issue 15: Write Helm chart with dev and prod values files
 
 ### Status
