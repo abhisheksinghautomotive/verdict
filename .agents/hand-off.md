@@ -2,6 +2,29 @@
 
 ---
 
+## Issue 21: Implement test execution against FastAPI app in workflow
+
+### Status
+- **Completed Issue**: GitHub Issue #26 (`Issue 21` in `milestones.md`)
+- **Git Branch**: `feat/issue-26-eks-test-execution`
+
+### What Was Completed
+1. **Created Test Execution Script**: Created `.github/scripts/run_tests.py` using standard python library (`urllib`). The script manages the background `kubectl port-forward` subprocess, polls `/health` to verify connectivity, POSTs test files to `/run-test`, and aggregates results into `test_results.json` before cleanly terminating the tunnel.
+2. **Created Unit Tests**: Created `app/tests/test_run_tests.py` with mock-based unit tests for all functions in `run_tests.py`, achieving 97% statement coverage.
+3. **Validated Code Quality**: Ran `ruff check` and `mypy --strict` to verify PEP 8 compliance and strict type safety with zero errors.
+4. **Modified GHA Workflow**: Updated `.github/workflows/pr-test-gate.yml` to:
+   - Check out code with `fetch-depth: 0` to preserve git history.
+   - Run `detect_changed_tests.py` on the PR branch.
+   - If tests changed, log in to ECR, build and push image, configure `kubeconfig`, deploy/upgrade via Helm with `--wait`, and run `run_tests.py`.
+   - Clean up by running `helm uninstall` in a post-action step.
+   - Addressed all actionlint and shellcheck issues, ensuring all dynamic inputs are passed via environment variables (no ${{ }} interpolation in `run:`).
+5. **Updated Status Table**: Updated the milestone status table in `README.md`.
+
+### Next Steps
+- Implement **Milestone 3 Issue 22**: Add PR comment step with pass/fail results.
+
+---
+
 ## Issue 20: Write pr-test-gate.yml workflow with OIDC authentication
 
 ### Status

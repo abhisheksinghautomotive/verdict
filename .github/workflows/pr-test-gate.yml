@@ -24,13 +24,91 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: "3.12"
+
+      - name: Detect changed test files
+        id: detect
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          python .github/scripts/detect_changed_tests.py \
+            --base "origin/$BASE_REF" \
+            --head HEAD
 
       - name: Configure AWS credentials
+        if: steps.detect.outputs.has_changed_tests == 'true'
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Verify AWS authentication
+      - name: Get AWS Account ID
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        id: aws-id
         run: |
-          aws sts get-caller-identity
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Amazon ECR
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          AWS_ACCOUNT_ID: ${{ steps.aws-id.outputs.account_id }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_URL"
+
+      - name: Build and push Docker image
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          AWS_ACCOUNT_ID: ${{ steps.aws-id.outputs.account_id }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/verdict-dev"
+          docker build --platform linux/amd64 -t "$ECR_URL:$GITHUB_SHA" app/
+          docker push "$ECR_URL:$GITHUB_SHA"
+
+      - name: Update EKS kubeconfig
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          aws eks update-kubeconfig --region "$AWS_REGION" --name verdict-dev
+
+      - name: Deploy test runner via Helm
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          AWS_ACCOUNT_ID: ${{ steps.aws-id.outputs.account_id }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/verdict-dev"
+          IRSA_ARN="arn:aws:iam::$AWS_ACCOUNT_ID:role/verdict-app-irsa"
+          helm upgrade --install verdict-app ./helm/verdict-app \
+            -n verdict \
+            --create-namespace \
+            -f helm/verdict-app/values-dev.yaml \
+            --set image.repository="$ECR_URL" \
+            --set image.tag="$GITHUB_SHA" \
+            --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$IRSA_ARN" \
+            --wait
+
+      - name: Execute tests against EKS
+        if: steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          CHANGED_TESTS: ${{ steps.detect.outputs.changed_tests }}
+        run: |
+          # shellcheck disable=SC2086
+          python .github/scripts/run_tests.py $CHANGED_TESTS
+
+      - name: Cleanup Helm deployment
+        if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'
+        run: |
+          helm uninstall verdict-app -n verdict || true

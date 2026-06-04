@@ -17,6 +17,7 @@ def clear_results() -> None:
 
 def test_health_check() -> None:
     """Tests the /health endpoint for 200 OK status."""
+    # Trigger PR gate execution validation
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
