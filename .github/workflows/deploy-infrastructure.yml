@@ -40,7 +40,7 @@ jobs:
           python-version: "3.12"
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@b9cd54a17056637e6f85116743128b9b8287713d # v3.1.2
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_wrapper: false
 
@@ -94,7 +94,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@b9cd54a17056637e6f85116743128b9b8287713d # v3.1.2
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_wrapper: false
 
