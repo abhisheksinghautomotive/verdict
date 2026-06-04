@@ -2,6 +2,28 @@
 
 ---
 
+## Issue 25: Test full PR gating flow end to end
+
+### Status
+- **Completed Issue**: GitHub Issue #30 (`Issue 25` in `milestones.md`)
+- **Git Branch**: `feat/issue-30-pr-gate-verification`
+
+### What Was Completed
+1. **Verified Passing Gating Flow**:
+   - Created branch `feat/issue-30-passing-gate` with a dummy passing test (`app/tests/test_dummy_pass.py`).
+   - Opened PR #67 to trigger the `PR Test Gate` workflow.
+   - Verified that the pipeline successfully executed the test, posted a green status report comment, and marked the gate status as green.
+2. **Verified Failing Gating Flow**:
+   - Created branch `feat/issue-30-failing-gate` with a dummy failing test (`app/tests/test_dummy_fail.py`).
+   - Opened PR #68 to trigger the `PR Test Gate` workflow.
+   - Verified that the pipeline failed on the test run, posted a red diagnostic report comment with detailed pytest traceback logs inside a collapsible section, and marked the gate status as red to block merging.
+3. **Created Runbook Documentation**: Added `docs/runbooks/pr-gate-demo.md` containing a complete execution summary, links, and markdown logs for both verification runs.
+
+### Next Steps
+- Implement **Milestone 3 Issue 25a**: Write `nightly-teardown.yml` schedule workflow as cost insurance.
+
+---
+
 ## Issue 24: Write deploy-infrastructure.yml for Terraform plan on PR and apply on merge
 
 ### Status
