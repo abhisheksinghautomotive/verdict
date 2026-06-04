@@ -9,6 +9,7 @@ locals {
     ManagedBy   = "terraform"
     CostCenter  = "personal"
   }
+  is_gha = length(regexall("gha-verdict-deploy", data.aws_caller_identity.current.arn)) > 0
 }
 
 module "vpc" {
@@ -91,6 +92,8 @@ resource "helm_release" "aws_load_balancer_controller" {
 }
 
 resource "aws_eks_access_entry" "gha" {
+  count = local.is_gha ? 0 : 1
+
   cluster_name  = module.eks.cluster_name
   principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/gha-verdict-deploy"
   type          = "STANDARD"
@@ -98,6 +101,8 @@ resource "aws_eks_access_entry" "gha" {
 }
 
 resource "aws_eks_access_policy_association" "gha_admin" {
+  count = local.is_gha ? 0 : 1
+
   cluster_name  = module.eks.cluster_name
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
   principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/gha-verdict-deploy"
