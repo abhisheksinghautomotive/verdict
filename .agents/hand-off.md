@@ -2,6 +2,24 @@
 
 ---
 
+## Issue 24: Write deploy-infrastructure.yml for Terraform plan on PR and apply on merge
+
+### Status
+- **Completed Issue**: GitHub Issue #29 (`Issue 24` in `milestones.md`)
+- **Git Branch**: `feat/issue-29-deploy-infrastructure` (merged to `main`)
+
+### What Was Completed
+1. **Created CI/CD Workflow**: Added `.github/workflows/deploy-infrastructure.yml` which triggers on changes to `terraform/**`. It runs a `plan` job on PRs and an `apply` job on pushes to `main` branch.
+2. **Created Post-Plan Helper**: Created `.github/scripts/post_tf_plan.py` to extract plan summaries and post them as sticky comments to the PR.
+3. **Excluded GHA Test Files from EKS**: Added `app/tests/test_post_tf_plan.py` and `app/tests/test_post_pr_comment.py` to the `exclude_tests` filter in `detect_changed_tests.py` so workflow script tests are not run inside EKS.
+4. **Wrote Unit Tests**: Created `app/tests/test_post_tf_plan.py` achieving 88% statement coverage.
+5. **Verified End-to-End**: Verified plan comments on PR and automated terraform apply on push to `main` branch.
+
+### Next Steps
+- Implement **Milestone 3 Issue 25**: Test full PR gating flow end to end.
+
+---
+
 ## Issue 23: Configure branch protection to require pr-test-gate status check
 
 ### Status
