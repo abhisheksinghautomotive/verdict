@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "terraform/**"
+  workflow_dispatch:
 
 # Minimal top-level permissions to enforce secure-by-default behavior
 permissions: {}
