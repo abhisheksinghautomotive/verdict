@@ -1,10 +1,12 @@
+import json
+import logging
 import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import TEST_RESULTS, app
+from app.main import TEST_RESULTS, VerdictJsonFormatter, app, request_id_var
 
 client = TestClient(app)
 
@@ -139,3 +141,55 @@ def test_run_test_subprocess_exception(
     response = client.post("/run-test", json={"test_file": "app/tests/test_main.py"})
     assert response.status_code == 500
     assert "Subprocess execution failed" in response.json()["detail"]
+
+
+def test_json_formatter_fields() -> None:
+    """Tests that VerdictJsonFormatter correctly adds and structures fields."""
+    formatter = VerdictJsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+    record = logging.LogRecord(
+        name="test-logger",
+        level=logging.INFO,
+        pathname="test_file.py",
+        lineno=10,
+        msg="Test message",
+        args=(),
+        exc_info=None,
+    )
+
+    # Set request ID context
+    token = request_id_var.set("test-request-id-123")
+    try:
+        formatted_str = formatter.format(record)
+        formatted_json = json.loads(formatted_str)
+
+        assert "timestamp" in formatted_json
+        assert formatted_json["level"] == "INFO"
+        assert formatted_json["service"] == "verdict-app"
+        assert formatted_json["request_id"] == "test-request-id-123"
+        assert formatted_json["message"] == "Test message"
+    finally:
+        request_id_var.reset(token)
+
+
+def test_http_logging_format(caplog: pytest.LogCaptureFixture) -> None:
+    """Verifies that HTTP requests produce log records with correct fields."""
+    with caplog.at_level(logging.INFO):
+        response = client.get("/health")
+        assert response.status_code == 200
+
+        # Find the request_completed log record
+        request_completed_record = None
+        for record in caplog.records:
+            if record.message == "request_completed":
+                request_completed_record = record
+                break
+
+        assert request_completed_record is not None, (
+            f"Logs did not contain request_completed: {caplog.records}"
+        )
+
+        # Assert log record attributes
+        assert request_completed_record.levelname == "INFO"
+        assert getattr(request_completed_record, "path", None) == "/health"
+        assert getattr(request_completed_record, "status", None) == 200
+        assert hasattr(request_completed_record, "duration_ms")
