@@ -3,7 +3,7 @@
 # Configuration variables
 ALERT_EMAIL ?=
 
-.PHONY: help bootstrap up down nuke cost
+.PHONY: help bootstrap up demo down nuke cost
 
 help:
 	@echo "Verdict Platform Lifecycle Manager"
@@ -13,6 +13,7 @@ help:
 	@echo "  bootstrap   Initialize and apply the Terraform bootstrap stack"
 	@echo "              Usage: make bootstrap [ALERT_EMAIL=user@example.com]"
 	@echo "  up          Provision dev infrastructure and deploy Helm application"
+	@echo "  demo        Port-forward local port 8080 to the Helm application on EKS"
 	@echo "  down        Tear down the Helm application and dev infrastructure"
 	@echo "  nuke        Destroy the Terraform bootstrap stack (requires confirmation)"
 	@echo "  cost        Fetch current month AWS costs via Cost Explorer"
@@ -52,6 +53,11 @@ up:
 		echo "Helm chart directory not found. Skipping Helm installation."; \
 	fi
 
+demo:
+	@echo "Configuring kubeconfig for EKS..."
+	aws eks update-kubeconfig --region ap-south-1 --name verdict-dev
+	@echo "Starting port-forward on port 8080. Press Ctrl+C to stop."
+	kubectl port-forward -n verdict svc/verdict-app 8080:80
 
 down:
 	@if which helm >/dev/null 2>&1 && helm list -n verdict 2>/dev/null | grep -q verdict-app; then \

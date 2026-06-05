@@ -2,6 +2,32 @@
 
 ---
 
+## Issue 31: Write README with architecture diagram and setup instructions
+
+### Status
+- **Completed Issue**: GitHub Issue #37 (`Issue 31` in `milestones.md`)
+- **Git Branch**: `feat/issue-37-readme-update`
+
+### What Was Completed
+1. **Makefile Target**: Added the `demo` target to the root `Makefile` to simplify local validation via kubectl port-forwarding to port 8080, and updated the help menu.
+2. **Documentation Overhaul**: Completely rewrote the root-level `README.md` to be a clear, informative entrypoint for developers and recruiters. Added:
+   - Modern badges detailing AWS region (`ap-south-1`), EKS version (`1.30`), and licensing.
+   - High-fidelity Mermaid flowchart depicting the PR gating pipeline.
+   - A detailed tech-stack breakdown table outlining technologies and their architectural roles.
+   - Step-by-step lifecycle workflow commands (`make bootstrap`, `make up`, `make demo`, `make down`).
+   - Cost story breaking down active spend ($0.12/hr), at-rest spend ($1.55/mo), and monthly runway expectations on a $100 credit.
+   - Embedded screenshots demonstrating passing and failing PR comments (`docs/images/passing_pr.png`, `docs/images/failing_pr.png`) and the AWS Cost Explorer monthly budget trends (`docs/images/cost_explorer.png`).
+3. **Quality & Validation**:
+   - Validated that the full test suite runs cleanly (80/80 tests passed).
+   - Checked Python code formatting with `ruff` and verified type-checking with `mypy` using custom search paths.
+   - Verified GitHub Actions workflows using `actionlint` with zero errors.
+
+### Next Steps
+- Open PR for Issue 37, verify checks pass, and squash-merge to `main`.
+- Once merged, run `make down` to destroy local compute and minimize active AWS spend.
+
+---
+
 ## Issue 30: Add container security context to Helm chart
 
 ### Status
