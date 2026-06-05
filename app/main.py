@@ -204,20 +204,18 @@ def resolve_test_path(test_file: str) -> Path:
     if not SAFE_PATH_REGEX.match(test_file):
         raise ValueError("Access denied: path traversal detected.")
 
-    # 2. Get absolute path of project root
-    project_root = Path(__file__).resolve().parent.parent
+    # 2. Define strict allowlisted root for test files: app/tests
+    tests_root = (Path(__file__).resolve().parent / "tests").resolve()
 
-    # 3. Handle prepending app/ if needed for normalization
-    cleaned_file = test_file
-    if cleaned_file.startswith("tests/"):
-        cleaned_file = "app/" + cleaned_file
+    # 3. Normalize accepted input forms to a filename under tests_root
+    file_name = Path(test_file).name
 
-    # 4. Resolve path relative to project root
-    resolved_path = (project_root / cleaned_file).resolve()
+    # 4. Resolve path relative to tests_root
+    resolved_path = (tests_root / file_name).resolve()
 
-    # 5. Enforce that resolved path is contained within project_root
+    # 5. Enforce that resolved path is contained within tests_root
     try:
-        resolved_path.relative_to(project_root)
+        resolved_path.relative_to(tests_root)
     except ValueError as exc:
         raise ValueError("Access denied: path traversal detected.") from exc
 
