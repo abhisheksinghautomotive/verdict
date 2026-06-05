@@ -447,6 +447,7 @@ verdict/
 | 008 | Nightly teardown workflow | Caps blast radius |
 | 009 | AWS Load Balancer Controller | $0 additional cost in dev |
 | 010 | Secrets Manager + customer-managed KMS | ~$1.40/mo at rest cost |
+| 011 | Pod security context and container hardening | $0 |
 
 Full ADRs live in `docs/adrs/`.
 
