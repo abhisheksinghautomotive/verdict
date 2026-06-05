@@ -19,6 +19,12 @@ variable "secrets_manager_secret_arn" {
   default     = null
 }
 
+variable "kms_key_arn" {
+  type        = string
+  description = "The ARN of the customer-managed KMS key used to encrypt the secret"
+  default     = null
+}
+
 variable "common_tags" {
   type        = map(string)
   description = "Common tags to apply to all resources"

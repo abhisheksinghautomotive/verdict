@@ -35,6 +35,8 @@ up:
 		echo "Building Docker image..." && \
 		docker build --platform linux/amd64 -t $${ECR_URL}:dev app/ && \
 		echo "Pushing Docker image to ECR..." && \
+		REPO_NAME=$$(echo $${ECR_URL} | cut -d'/' -f2) && \
+		aws ecr batch-delete-image --repository-name $${REPO_NAME} --image-ids imageTag=dev --region ap-south-1 || true && \
 		docker push $${ECR_URL}:dev && \
 		echo "Installing Helm chart..." && \
 		aws eks update-kubeconfig --region ap-south-1 --name verdict-dev && \

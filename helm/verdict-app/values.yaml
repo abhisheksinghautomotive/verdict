@@ -42,3 +42,6 @@ securityContext:
       - ALL
   seccompProfile:
     type: RuntimeDefault
+
+secretId: "verdict/app/api-key"
+awsRegion: "ap-south-1"

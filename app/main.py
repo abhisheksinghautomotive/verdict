@@ -1,14 +1,18 @@
 import contextvars
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import json as std_json
 import logging
+import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
 from typing import Any, Awaitable, Callable
 import uuid
 
+import boto3
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from pythonjsonlogger import json
@@ -78,10 +82,45 @@ setup_logging()
 logger = logging.getLogger("verdict-app")
 
 
+def load_application_secrets(ignore_test_check: bool = False) -> dict[str, Any] | None:
+    """Retrieves secrets from AWS Secrets Manager at startup.
+
+    Args:
+        ignore_test_check: If True, bypasses the pytest detection check (for testing).
+
+    Returns:
+        dict: The retrieved secrets or None if failed.
+    """
+    if "pytest" in sys.modules and not ignore_test_check:
+        logger.info("Pytest detected. Mocking secrets retrieval.")
+        return {"api_key": "mocked-dev-api-key-value"}
+
+    secret_id = os.environ.get("VERDICT_SECRET_ID", "verdict/app/api-key")
+    region_name = os.environ.get("AWS_REGION", "ap-south-1")
+
+    logger.info("Initializing Secrets Manager client for region: %s", region_name)
+    logger.info("Retrieving secret from Secrets Manager")
+
+    try:
+        client = boto3.client("secretsmanager", region_name=region_name)
+        response = client.get_secret_value(SecretId=secret_id)
+        logger.info("Successfully retrieved secret from Secrets Manager")
+        if "SecretString" in response:
+            secret_data = std_json.loads(response["SecretString"])
+            logger.info("Secret string payload received successfully")
+            return dict(secret_data)
+        else:
+            logger.warning("Secret binary payload received")
+    except Exception as e:
+        logger.error("Failed to retrieve secret from Secrets Manager: %s", str(e))
+    return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
     """Lifespan event handler to set up JSON logging on startup."""
     setup_logging()
+    load_application_secrets()
     yield
 
 
@@ -143,34 +182,45 @@ class TestRunResponse(BaseModel):
     duration_ms: int = Field(..., description="The test duration in milliseconds.")
 
 
+SAFE_PATH_REGEX = re.compile(r"^(?:app/)?tests/(test_[a-zA-Z0-9_]+\.py)$")
+
+
 def resolve_test_path(test_file: str) -> Path:
     """Resolves and validates the path of the target test file.
 
     Handles paths specified relative to either the workspace root or the
-    app directory itself.
+    app directory itself, preventing path traversal attacks.
 
     Args:
         test_file: The path to the test file.
 
     Returns:
         Path: The resolved Path object.
+
+    Raises:
+        ValueError: If the path is outside the allowed root directory or is invalid.
     """
-    path = Path(test_file)
-    if path.exists() and path.is_file():
-        return path.resolve()
+    # 1. Enforce strict regular expression matching and extract only filename
+    match = SAFE_PATH_REGEX.fullmatch(test_file)
+    if not match:
+        raise ValueError("Access denied: path traversal detected.")
 
-    # If running from inside 'app/' directory and path starts with 'app/'
-    if test_file.startswith("app/") and Path(".").resolve().name == "app":
-        stripped_path = Path(test_file[4:])
-        if stripped_path.exists() and stripped_path.is_file():
-            return stripped_path.resolve()
+    # 2. Define strict allowlisted root for test files: app/tests
+    tests_root = (Path(__file__).resolve().parent / "tests").resolve()
 
-    # Try resolving relative to current working directory
-    cwd_path = Path(".").resolve() / test_file
-    if cwd_path.exists() and cwd_path.is_file():
-        return cwd_path.resolve()
+    # 3. Use validated filename captured from allowlisted pattern
+    file_name = match.group(1)
 
-    return path
+    # 4. Resolve path relative to tests_root
+    resolved_path = (tests_root / file_name).resolve()
+
+    # 5. Enforce that resolved path is contained within tests_root
+    try:
+        resolved_path.relative_to(tests_root)
+    except ValueError as exc:
+        raise ValueError("Access denied: path traversal detected.") from exc
+
+    return resolved_path
 
 
 @app.post("/run-test", response_model=TestRunResponse)
@@ -187,7 +237,14 @@ def run_test(payload: TestRunRequest) -> dict[str, Any]:
         HTTPException: If the test file is not found or execution fails.
     """
     logger.info("Received request to run test file: %s", payload.test_file)
-    resolved_path = resolve_test_path(payload.test_file)
+    try:
+        resolved_path = resolve_test_path(payload.test_file)
+    except ValueError as exc:
+        logger.error("Path validation failed: %s", str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
 
     if not resolved_path.exists() or not resolved_path.is_file():
         logger.error("Test file not found: %s", payload.test_file)

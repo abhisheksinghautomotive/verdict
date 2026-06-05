@@ -6,7 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import TEST_RESULTS, VerdictJsonFormatter, app, request_id_var
+from app.main import (
+    TEST_RESULTS,
+    VerdictJsonFormatter,
+    app,
+    request_id_var,
+    load_application_secrets,
+)
 
 client = TestClient(app)
 
@@ -34,7 +40,9 @@ def test_get_results_empty() -> None:
 
 def test_run_test_not_found() -> None:
     """Tests /run-test returns 404 when target file does not exist."""
-    response = client.post("/run-test", json={"test_file": "nonexistent_file.py"})
+    response = client.post(
+        "/run-test", json={"test_file": "app/tests/test_nonexistent.py"}
+    )
     assert response.status_code == 404
     assert "Test file not found" in response.json()["detail"]
 
@@ -193,3 +201,40 @@ def test_http_logging_format(caplog: pytest.LogCaptureFixture) -> None:
         assert getattr(request_completed_record, "path", None) == "/health"
         assert getattr(request_completed_record, "status", None) == 200
         assert hasattr(request_completed_record, "duration_ms")
+
+
+@patch("boto3.client")
+def test_load_application_secrets_success(mock_boto_client: MagicMock) -> None:
+    """Tests load_application_secrets successfully fetches a secret."""
+    mock_secrets_client = MagicMock()
+    mock_secrets_client.get_secret_value.return_value = {
+        "SecretString": '{"api_key": "some-val"}'
+    }
+    mock_boto_client.return_value = mock_secrets_client
+
+    result = load_application_secrets(ignore_test_check=True)
+    assert result == {"api_key": "some-val"}
+    mock_boto_client.assert_called_once_with("secretsmanager", region_name="ap-south-1")
+    mock_secrets_client.get_secret_value.assert_called_once_with(
+        SecretId="verdict/app/api-key"
+    )
+
+
+@patch("boto3.client")
+def test_load_application_secrets_failure(mock_boto_client: MagicMock) -> None:
+    """Tests load_application_secrets error handling on failure."""
+    mock_secrets_client = MagicMock()
+    mock_secrets_client.get_secret_value.side_effect = RuntimeError(
+        "AWS Connection Error"
+    )
+    mock_boto_client.return_value = mock_secrets_client
+
+    result = load_application_secrets(ignore_test_check=True)
+    assert result is None
+
+
+def test_run_test_path_traversal() -> None:
+    """Tests /run-test returns 400 when path traversal is attempted."""
+    response = client.post("/run-test", json={"test_file": "../../../etc/passwd"})
+    assert response.status_code == 400
+    assert "Access denied: path traversal detected." in response.json()["detail"]

@@ -52,6 +52,16 @@ data "aws_iam_policy_document" "verdict_app" {
     resources = [local.secrets_manager_arn]
   }
 
+  dynamic "statement" {
+    for_each = var.kms_key_arn != null ? [var.kms_key_arn] : []
+    content {
+      sid       = "KMSDecrypt"
+      effect    = "Allow"
+      actions   = ["kms:Decrypt"]
+      resources = [statement.value]
+    }
+  }
+
   statement {
     sid       = "ECRGetAuthToken"
     effect    = "Allow"

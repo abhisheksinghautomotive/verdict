@@ -40,13 +40,23 @@ module "ecr" {
   common_tags     = local.common_tags
 }
 
+module "secrets" {
+  source = "../../modules/secrets"
+
+  secret_name   = "verdict/app/api-key"
+  kms_key_alias = "alias/verdict-secrets-key"
+  common_tags   = local.common_tags
+}
+
 module "iam" {
   source = "../../modules/iam"
 
-  oidc_provider_arn  = module.eks.oidc_provider_arn
-  oidc_provider_url  = module.eks.oidc_provider_url
-  ecr_repository_arn = module.ecr.repository_arn
-  common_tags        = local.common_tags
+  oidc_provider_arn          = module.eks.oidc_provider_arn
+  oidc_provider_url          = module.eks.oidc_provider_url
+  ecr_repository_arn         = module.ecr.repository_arn
+  secrets_manager_secret_arn = module.secrets.secret_arn
+  kms_key_arn                = module.secrets.kms_key_arn
+  common_tags                = local.common_tags
 }
 
 resource "helm_release" "aws_load_balancer_controller" {

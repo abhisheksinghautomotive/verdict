@@ -2,6 +2,39 @@
 
 ---
 
+## Issue 29: Migrate application secrets to AWS Secrets Manager
+
+### Status
+- **Completed Issue**: GitHub Issue #35 (`Issue 29` in `milestones.md`)
+- **Git Branch**: `feat/issue-35-migrate-secrets`
+
+### What Was Completed
+1. **Secrets Module**: Created a reusable `secrets` module in `terraform/modules/secrets/` containing:
+   - `main.tf`: Defines `aws_kms_key` (customer-managed KMS key for Secrets Manager encryption with 7-day deletion window), `aws_kms_alias` (`alias/verdict-secrets-key`), `aws_secretsmanager_secret` (`verdict/app/api-key` with `recovery_window_in_days = 0`), and `aws_secretsmanager_secret_version` (holding initial placeholder data `{"api_key": "dummy-dev-api-key-value"}`).
+2. **IAM/IRSA Updates**: Updated `terraform/modules/iam/` to:
+   - Accept `kms_key_arn` input variable.
+   - Attach a conditional statement to the `verdict-app-irsa` role policy allowing `kms:Decrypt` on the KMS key ARN.
+3. **Environment Integration**: Instantiated the `secrets` module in `terraform/environments/dev/main.tf` and passed both the secret ARN and KMS key ARN to the `iam` module.
+4. **Helm Configuration**: Added `secretId` and `awsRegion` Helm variables in `values.yaml` and injected them as environment variables `VERDICT_SECRET_ID` and `AWS_REGION` in the pod deployment spec.
+5. **FastAPI Application Startup Secrets Retrieval**: Added `boto3` client logic in `app/main.py` to dynamically load the Secrets Manager secret value on startup, logging the success. Mocked retrieval during unit tests (pytest environment detection) to prevent real AWS calls.
+6. **Immutable Tag Cleanup in Makefile**: Modified the `up` target in the root `Makefile` to dynamically detect and clear conflicting `dev` tags from ECR using `aws ecr batch-delete-image` before pushing, preventing registry overwrite errors.
+7. **Created ADR 010**: Documented the secrets migration architecture decision in `docs/adrs/010-secrets-manager.md` and updated `architecture.md`.
+8. **Vulnerability Resolution**:
+   - Resolved `py/clear-text-logging` CodeQL warning by removing the `secret_id` variable output from logs.
+   - Resolved `py/path-injection` CodeQL warning in `resolve_test_path` by applying strict regular expression validation (`SAFE_PATH_REGEX`), extracting the filename basename (`Path(test_file).name`), and enforcing path containment within `tests_root` using `relative_to` check.
+9. **Verification & Validation**:
+   - Formatted, linted, and type-checked code with `ruff` and `mypy` (0 errors).
+   - Ran Python unit tests locally using `pytest` achieving 100% pass rate.
+   - Deployed the stack to EKS via `make up` and verified that the pod successfully assumed the IRSA role to pull and decrypt the secret at startup.
+   - Verified that no plain-text secrets are visible in pod environment variables (`kubectl exec env`).
+   - Verified pod filesystem hardening (write to `/tmp` succeeded, write to `/` failed with Read-only file system).
+
+### Next Steps
+- Verify the `PR Test Gate` workflow execution on PR #75.
+- Merge PR #75 and verify that the `Deploy Infrastructure` merge workflow applies the new Secrets Manager and KMS resources without drift.
+
+---
+
 ## Issue 28: Create CloudWatch dashboard with golden signals
 
 ### Status

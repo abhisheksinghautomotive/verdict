@@ -58,6 +58,21 @@ output "alb_controller_role_arn" {
   value       = module.iam.alb_controller_role_arn
 }
 
+output "secret_arn" {
+  description = "The ARN of the Secrets Manager secret"
+  value       = module.secrets.secret_arn
+}
+
+output "secret_name" {
+  description = "The name of the Secrets Manager secret"
+  value       = module.secrets.secret_name
+}
+
+output "kms_key_arn" {
+  description = "The ARN of the customer-managed KMS key"
+  value       = module.secrets.kms_key_arn
+}
+
 
 
 
