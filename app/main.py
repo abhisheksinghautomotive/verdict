@@ -1,18 +1,129 @@
+import contextvars
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 import logging
+from pathlib import Path
 import subprocess
 import sys
 import time
-from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
+import uuid
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
+from pythonjsonlogger import json
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Context variable to hold the request ID
+request_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "request_id", default=""
+)
+
+
+class VerdictJsonFormatter(json.JsonFormatter):
+    """Custom JSON formatter to structure logs with verdict metadata."""
+
+    def add_fields(
+        self,
+        log_record: dict[str, Any],
+        record: logging.LogRecord,
+        message_dict: dict[str, Any],
+    ) -> None:
+        super().add_fields(log_record, record, message_dict)
+
+        # Format timestamp to ISO 8601 UTC
+        if "asctime" in log_record:
+            log_record["timestamp"] = log_record.pop("asctime")
+        else:
+            log_record["timestamp"] = datetime.fromtimestamp(
+                record.created, tz=timezone.utc
+            ).isoformat()
+
+        # Set level, service name, and request_id
+        log_record["level"] = record.levelname
+        log_record.pop("levelname", None)
+        log_record["service"] = "verdict-app"
+
+        req_id = request_id_var.get()
+        if req_id:
+            log_record["request_id"] = req_id
+
+
+def setup_logging() -> None:
+    """Configures structured JSON logging for the root logger and redirects Uvicorn loggers."""
+    root_logger = logging.getLogger()
+
+    # Remove all existing handlers
+    for handler in list(root_logger.handlers):
+        root_logger.removeHandler(handler)
+
+    # Create stream handler
+    json_handler = logging.StreamHandler(sys.stdout)
+    formatter = VerdictJsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+    json_handler.setFormatter(formatter)
+
+    # Configure root logger
+    root_logger.addHandler(json_handler)
+    root_logger.setLevel(logging.INFO)
+
+    # Configure uvicorn loggers to propagate to the root logger
+    for logger_name in ["uvicorn", "uvicorn.access", "uvicorn.error"]:
+        uv_logger = logging.getLogger(logger_name)
+        uv_logger.propagate = True
+        for handler in list(uv_logger.handlers):
+            uv_logger.removeHandler(handler)
+
+
+# Initialize logging immediately on import
+setup_logging()
 logger = logging.getLogger("verdict-app")
 
-app = FastAPI(title="Verdict Test Runner", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> Any:
+    """Lifespan event handler to set up JSON logging on startup."""
+    setup_logging()
+    yield
+
+
+app = FastAPI(title="Verdict Test Runner", version="1.0.0", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def log_requests(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """FastAPI middleware to inject request_id and log request details."""
+    req_id = str(uuid.uuid4())
+    token = request_id_var.set(req_id)
+    start_time = time.perf_counter()
+
+    try:
+        response = await call_next(request)
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+        logger.info(
+            "request_completed",
+            extra={
+                "path": request.url.path,
+                "status": response.status_code,
+                "duration_ms": duration_ms,
+            },
+        )
+        return response
+    except Exception as exc:
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+        logger.error(
+            "request_failed",
+            extra={
+                "path": request.url.path,
+                "status": 500,
+                "duration_ms": duration_ms,
+                "error": str(exc),
+            },
+        )
+        raise exc
+    finally:
+        request_id_var.reset(token)
+
 
 # Module-level list to store results in-memory
 TEST_RESULTS: list[dict[str, Any]] = []

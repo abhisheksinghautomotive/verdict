@@ -15,9 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # Add .github/scripts/ to sys.path programmatically
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts")
-)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
 
 # pylint: disable=import-error,wrong-import-position
 import run_tests

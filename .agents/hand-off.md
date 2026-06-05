@@ -2,6 +2,42 @@
 
 ---
 
+## Issue 27: Implement structured JSON logging in FastAPI
+
+### Status
+- **Completed Issue**: GitHub Issue #33 (`Issue 27` in `milestones.md`)
+- **Git Branch**: `feat/issue-33-json-logging`
+
+### What Was Completed
+1. **Unified JSON Formatter**: Implemented `VerdictJsonFormatter` extending `pythonjsonlogger.json.JsonFormatter` in `app/main.py`. Standardized formatting to map `asctime` to ISO 8601 UTC `timestamp`, include logging levels as `level`, and add metadata fields (`service="verdict-app"` and `request_id`).
+2. **Context-Aware Request Middleware**: Configured FastAPI HTTP middleware to generate and inject a unique `request_id` (UUID4) per request using `contextvars`. Added request-completion logging including custom fields (`path`, `status`, and `duration_ms`).
+3. **Log Handler Hijack**: Implemented `setup_logging()` to override root logger stream handlers to stdout, and configured `uvicorn`, `uvicorn.access`, and `uvicorn.error` loggers to propagate up to root (disabling their own default text handlers), providing unified JSON output across all server processes.
+4. **OTel/CloudWatch Compatibility Fix**: Rewrote `app/Dockerfile` to install dependencies directly into default python system paths (`/usr/local`) instead of custom `/install`. This resolved a critical crash where CloudWatch ADOT Python auto-instrumentation overwrote `PYTHONPATH`, hiding all dependencies.
+5. **Helm Pull Policy update**: Changed `image.pullPolicy` to `Always` in `helm/verdict-app/values-dev.yaml` to ensure local EKS deployments pull new Docker images on restart.
+6. **Added Unit Tests**: Created unit tests verifying structured formatter outputs and request-injection behavior under `app/tests/test_main.py`. Verified that python test suite passes with 98% statement coverage.
+
+### Next Steps
+- Implement **Milestone 4 Issue 28**: Create CloudWatch dashboard with golden signals.
+
+---
+
+## EKS Access Entry Conflict Resolution (Hotfix)
+
+### Status
+- **Completed Task**: EKS Access Entry duplication conflict resolution (`ResourceInUseException` fix)
+- **Git Branch**: `fix/issue-32-eks-access-entry-conflict` (squash-merged to `main`)
+
+### What Was Completed
+1. **Conditional IAM Access Mapping**: Updated `terraform/environments/dev/main.tf` to compute caller identity. Detected if the runner role is the GitHub Actions deploy role (`gha-verdict-deploy`) via `local.is_gha`.
+2. **Conditional Resource Count**: Assigned `count = local.is_gha ? 0 : 1` to `aws_eks_access_entry.gha` and `aws_eks_access_policy_association.gha_admin` to prevent Terraform from explicitly defining the access entry when initialized by the cluster-creator role.
+3. **PR Gating and Validation**: Opened PR #72, passed all security, linting, and planning checks, and squash-merged to `main`.
+4. **Clean CD Apply**: Verified that the post-merge `Deploy Infrastructure` workflow run successfully reconciled AWS resources without errors.
+
+### Next Steps
+- Execute `make down` locally to destroy compute infrastructure and minimize AWS spend.
+
+---
+
 ## Issue 26: Enable CloudWatch Container Insights with 1-day log retention in dev
 
 ### Status

@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Install dependencies into /install
-RUN pip install --no-cache-dir --target=/install -r requirements.txt
+# Install dependencies into standard system paths
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.12-slim AS runtime
@@ -25,22 +25,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -u 10001 -m appuser
 
 # Configure python environment variables
-ENV PYTHONPATH=/install
-ENV PATH=/install/bin:$PATH
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
 # Copy dependency packages from builder
-COPY --from=builder /install /install
+COPY --from=builder /usr/local /usr/local
 
 # Copy application files under the app/ package namespace
 COPY main.py /app/app/main.py
 COPY tests/ /app/app/tests/
 
 # Set proper file permissions for the non-root user
-RUN chown -R appuser:appuser /app /install
+RUN chown -R appuser:appuser /app
 
 # Switch to the non-root user
 USER 10001
