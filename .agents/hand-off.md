@@ -2,6 +2,30 @@
 
 ---
 
+## Issue 30: Add container security context to Helm chart
+
+### Status
+- **Completed Issue**: GitHub Issue #36 (`Issue 30` in `milestones.md`)
+- **Git Branch**: `feat/issue-36-security-context`
+
+### What Was Completed
+1. **Workload Hardening**: Enforced security contexts directly in `helm/verdict-app/templates/deployment.yaml` to ensure they are always applied and cannot be accidentally bypassed:
+   - Pod `securityContext`: `runAsNonRoot: true`, `runAsUser: 10001`, `fsGroup: 10001`.
+   - Container `securityContext`: `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, `capabilities.drop: ["ALL"]`, `seccompProfile.type: RuntimeDefault`.
+   - Mounted `emptyDir` volume at `/tmp` to support temporary write operations required by Uvicorn.
+2. **Architecture Documentation**: Created ADR `docs/adrs/011-pod-security-hardening.md` documenting the workload hardening design and details.
+3. **Architecture Mapping**: Updated the ADR index in `architecture.md` to map ADR 011.
+4. **Validation and Testing**:
+   - Formatted, linted, and type-checked code cleanly (`ruff`, `mypy`, `terraform fmt`, `actionlint`).
+   - Ran all 80 unit tests successfully with 98% overall statement coverage.
+   - Deployed the stack to EKS using `make up` and verified that the pod is active, running as non-root UID 10001, and cannot write to the root filesystem but successfully writes to `/tmp`.
+
+### Next Steps
+- Verify the `PR Test Gate` workflow execution on PR for Issue 36.
+- Merge the PR and verify that the `Deploy Infrastructure` merge workflow applies correctly.
+
+---
+
 ## Issue 29: Migrate application secrets to AWS Secrets Manager
 
 ### Status
