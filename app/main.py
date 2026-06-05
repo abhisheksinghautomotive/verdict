@@ -215,9 +215,11 @@ def resolve_test_path(test_file: str) -> Path:
     # 4. Resolve path relative to project root
     resolved_path = (project_root / cleaned_file).resolve()
 
-    # 5. Check if the resolved path starts with project_root
-    if not str(resolved_path).startswith(str(project_root)):
-        raise ValueError("Access denied: path traversal detected.")
+    # 5. Enforce that resolved path is contained within project_root
+    try:
+        resolved_path.relative_to(project_root)
+    except ValueError as exc:
+        raise ValueError("Access denied: path traversal detected.") from exc
 
     return resolved_path
 
