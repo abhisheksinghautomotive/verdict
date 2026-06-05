@@ -2,6 +2,32 @@
 
 ---
 
+## Issue 32: Final cost review and cleanup
+
+### Status
+- **Completed Issue**: GitHub Issue #38 (`Issue 32` in `milestones.md`)
+- **Git Branch**: `feat/issue-38-cost-review-cleanup`
+
+### What Was Completed
+1. **Cost Audit Report**: Created `docs/runbooks/cost-audit-report.md` detailing:
+   - Final audited spend for the 8-week period (~$8.42 USD), well within the $100 cap.
+   - Resource orphan audits verifying zero active resources remaining for EKS, ECR, VPC, secrets, and logs.
+   - The decision to keep bootstrap resources active (costs ~$0.05/mo for S3 state storage only) to enable seamless playground demos.
+2. **README and Milestone Statuses**:
+   - Marked Milestone 4: Observability and Security as "Completed" in the project status table in `README.md`.
+   - Updated the `README.md` Cost Discipline table to display the audited 8-week spend metric.
+3. **Quality and Validation**:
+   - Ran `pytest` ensuring 80/80 tests pass successfully.
+   - Checked Python code quality with `ruff` and type-safety with `mypy` using custom search paths (0 errors).
+   - Validated CI/CD workflows using `actionlint` with zero errors.
+
+### Next Steps
+- Open a PR for `feat/issue-38-cost-review-cleanup` and confirm checks pass.
+- Squash-merge to `main` and archive the branch.
+
+---
+
+
 ## Issue 31: Write README with architecture diagram and setup instructions
 
 ### Status
