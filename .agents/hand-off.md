@@ -2,6 +2,27 @@
 
 ---
 
+## Issue 28: Create CloudWatch dashboard with golden signals
+
+### Status
+- **Completed Issue**: GitHub Issue #34 (`Issue 28` in `milestones.md`)
+- **Git Branch**: `feat/issue-34-cloudwatch-dashboard`
+
+### What Was Completed
+1. **Observability Module**: Created a reusable `observability` module in `terraform/modules/observability/` containing:
+   - `main.tf`: Defines metric filters for `RequestLatency` (extracting `$.duration_ms`), `RequestCount` (matching all requests), and `Http5xxCount` (matching status >= 500) from EKS application logs.
+   - `dashboard.tf`: Provisions an `aws_cloudwatch_dashboard` configured with a 2x3 grid displaying latency (p50/p95/p99), traffic, error rate (5xx % via metric math), saturation (CPU/memory % from Container Insights), pipeline duration, and node count.
+2. **Dev Environment Integration**: Instantiated the new observability module in `terraform/environments/dev/main.tf` and linked it directly to the cluster name and application log group outputs.
+3. **Pipeline Timer Integration**: Updated `pr-test-gate.yml` to start a timer upon checkout and publish the pipeline duration to CloudWatch as the custom metric `PipelineDuration` using `aws cloudwatch put-metric-data`.
+4. **Documentation and Verification**: Updated `architecture.md` Component Inventory. Ran `terraform validate` and `actionlint` validating configurations with 0 errors. Verified the `terraform plan` showing 4 new resources to add. Ran python tests successfully with 98% overall statement coverage.
+
+### Next Steps
+- Merge PR #74 and verify that the dashboard and metric filters are successfully provisioned by the `Deploy Infrastructure` merge workflow.
+- Verify that the `PR Test Gate` workflow publishes the `PipelineDuration` metric.
+
+---
+
+
 ## Issue 27: Implement structured JSON logging in FastAPI
 
 ### Status
