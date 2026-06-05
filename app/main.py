@@ -5,6 +5,7 @@ import json as std_json
 import logging
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -98,7 +99,7 @@ def load_application_secrets(ignore_test_check: bool = False) -> dict[str, Any] 
     region_name = os.environ.get("AWS_REGION", "ap-south-1")
 
     logger.info("Initializing Secrets Manager client for region: %s", region_name)
-    logger.info("Retrieving secret: %s", secret_id)
+    logger.info("Retrieving secret from Secrets Manager")
 
     try:
         client = boto3.client("secretsmanager", region_name=region_name)
@@ -181,6 +182,9 @@ class TestRunResponse(BaseModel):
     duration_ms: int = Field(..., description="The test duration in milliseconds.")
 
 
+SAFE_PATH_REGEX = re.compile(r"^(app/)?tests/test_[a-zA-Z0-9_]+\.py$")
+
+
 def resolve_test_path(test_file: str) -> Path:
     """Resolves and validates the path of the target test file.
 
@@ -196,32 +200,23 @@ def resolve_test_path(test_file: str) -> Path:
     Raises:
         ValueError: If the path is outside the allowed root directory or is invalid.
     """
-    app_root = Path("/app").resolve()
-    if not app_root.exists():
-        app_root = Path(".").resolve()
-        if app_root.name == "app":
-            app_root = app_root.parent
+    # 1. Enforce strict regular expression matching to prevent traversal
+    if not SAFE_PATH_REGEX.match(test_file):
+        raise ValueError("Access denied: path traversal detected.")
 
-    # Adjust path if running from inside 'app/' directory on dev machine
+    # 2. Get absolute path of project root
+    project_root = Path(__file__).resolve().parent.parent
+
+    # 3. Handle prepending app/ if needed for normalization
     cleaned_file = test_file
-    if cleaned_file.startswith("app/") and Path(".").resolve().name == "app":
-        cleaned_file = cleaned_file[4:]
+    if cleaned_file.startswith("tests/"):
+        cleaned_file = "app/" + cleaned_file
 
-    # If running from inside 'app/' and the path is relative to it
-    if Path(".").resolve().name == "app" and not cleaned_file.startswith("/"):
-        candidate = (Path(".").resolve() / cleaned_file).resolve()
-        if (
-            candidate.exists()
-            and candidate.is_file()
-            and str(candidate).startswith(str(app_root))
-        ):
-            return candidate
+    # 4. Resolve path relative to project root
+    resolved_path = (project_root / cleaned_file).resolve()
 
-    # Try resolving relative to app_root
-    resolved_path = (app_root / cleaned_file).resolve()
-
-    # Check if the resolved path starts with the app_root to prevent traversal
-    if not str(resolved_path).startswith(str(app_root)):
+    # 5. Check if the resolved path starts with project_root
+    if not str(resolved_path).startswith(str(project_root)):
         raise ValueError("Access denied: path traversal detected.")
 
     return resolved_path

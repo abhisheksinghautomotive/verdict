@@ -40,7 +40,9 @@ def test_get_results_empty() -> None:
 
 def test_run_test_not_found() -> None:
     """Tests /run-test returns 404 when target file does not exist."""
-    response = client.post("/run-test", json={"test_file": "nonexistent_file.py"})
+    response = client.post(
+        "/run-test", json={"test_file": "app/tests/test_nonexistent.py"}
+    )
     assert response.status_code == 404
     assert "Test file not found" in response.json()["detail"]
 
