@@ -182,7 +182,7 @@ class TestRunResponse(BaseModel):
     duration_ms: int = Field(..., description="The test duration in milliseconds.")
 
 
-SAFE_PATH_REGEX = re.compile(r"^(app/)?tests/test_[a-zA-Z0-9_]+\.py$")
+SAFE_PATH_REGEX = re.compile(r"^(?:app/)?tests/(test_[a-zA-Z0-9_]+\.py)$")
 
 
 def resolve_test_path(test_file: str) -> Path:
@@ -200,15 +200,16 @@ def resolve_test_path(test_file: str) -> Path:
     Raises:
         ValueError: If the path is outside the allowed root directory or is invalid.
     """
-    # 1. Enforce strict regular expression matching to prevent traversal
-    if not SAFE_PATH_REGEX.match(test_file):
+    # 1. Enforce strict regular expression matching and extract only filename
+    match = SAFE_PATH_REGEX.fullmatch(test_file)
+    if not match:
         raise ValueError("Access denied: path traversal detected.")
 
     # 2. Define strict allowlisted root for test files: app/tests
     tests_root = (Path(__file__).resolve().parent / "tests").resolve()
 
-    # 3. Normalize accepted input forms to a filename under tests_root
-    file_name = Path(test_file).name
+    # 3. Use validated filename captured from allowlisted pattern
+    file_name = match.group(1)
 
     # 4. Resolve path relative to tests_root
     resolved_path = (tests_root / file_name).resolve()
