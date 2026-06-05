@@ -19,7 +19,10 @@
 5. **FastAPI Application Startup Secrets Retrieval**: Added `boto3` client logic in `app/main.py` to dynamically load the Secrets Manager secret value on startup, logging the success. Mocked retrieval during unit tests (pytest environment detection) to prevent real AWS calls.
 6. **Immutable Tag Cleanup in Makefile**: Modified the `up` target in the root `Makefile` to dynamically detect and clear conflicting `dev` tags from ECR using `aws ecr batch-delete-image` before pushing, preventing registry overwrite errors.
 7. **Created ADR 010**: Documented the secrets migration architecture decision in `docs/adrs/010-secrets-manager.md` and updated `architecture.md`.
-8. **Verification & Validation**:
+8. **Vulnerability Resolution**:
+   - Resolved `py/clear-text-logging` CodeQL warning by removing the `secret_id` variable output from logs.
+   - Resolved `py/path-injection` CodeQL warning in `resolve_test_path` by applying strict regular expression validation (`SAFE_PATH_REGEX`), extracting the filename basename (`Path(test_file).name`), and enforcing path containment within `tests_root` using `relative_to` check.
+9. **Verification & Validation**:
    - Formatted, linted, and type-checked code with `ruff` and `mypy` (0 errors).
    - Ran Python unit tests locally using `pytest` achieving 100% pass rate.
    - Deployed the stack to EKS via `make up` and verified that the pod successfully assumed the IRSA role to pull and decrypt the secret at startup.
