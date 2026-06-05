@@ -112,6 +112,11 @@ resource "aws_eks_access_policy_association" "gha_admin" {
   }
 }
 
+module "observability" {
+  source = "../../modules/observability"
 
-
-
+  cluster_name   = module.eks.cluster_name
+  log_group_name = aws_cloudwatch_log_group.containerinsights_application.name
+  aws_region     = var.aws_region
+  common_tags    = local.common_tags
+}

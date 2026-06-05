@@ -351,6 +351,8 @@ stateDiagram-v2
 | VPC Endpoints | OFF | ON (ECR, STS, Secrets) | `modules/vpc` (var-gated) |
 | CloudWatch Log Groups | 1-day retention | 7-day retention | `environments/dev/cloudwatch.tf` |
 | EKS Addons | CloudWatch Observability | same | `environments/dev/cloudwatch.tf` |
+| CloudWatch Dashboard | 6 golden signal widgets | same | `modules/observability` |
+
 
 
 ### 8.2 Application

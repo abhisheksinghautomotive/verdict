@@ -27,6 +27,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Start timer
+        run: |
+          echo "START_TIME=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Set up Python
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
@@ -120,6 +124,23 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           python .github/scripts/post_pr_comment.py --results-file test_results.json --status "$JOB_STATUS"
+
+      - name: Publish pipeline duration metric
+        if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'
+        env:
+          START_TIME: ${{ env.START_TIME }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          if [ -n "$START_TIME" ]; then
+            END_TIME=$(date +%s)
+            DURATION=$((END_TIME - START_TIME))
+            aws cloudwatch put-metric-data \
+              --namespace "verdict-app" \
+              --metric-name "PipelineDuration" \
+              --value "$DURATION" \
+              --unit Seconds \
+              --region "$AWS_REGION"
+          fi
 
       - name: Cleanup Helm deployment
         if: always() && steps.detect.outcome == 'success' && steps.detect.outputs.has_changed_tests == 'true'
