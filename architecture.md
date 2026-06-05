@@ -293,8 +293,9 @@ securityContext:
 | DynamoDB lock | $0.00 |
 | ECR images | $0.10 |
 | Secrets Manager | $0.40 |
+| KMS Key (customer-managed) | $1.00 |
 | AWS Budgets | $0.00 |
-| **Total** | **~$0.55/mo** |
+| **Total** | **~$1.55/mo** |
 
 ### 7.3 Budget Runway on $100 Credit
 
@@ -318,7 +319,8 @@ stateDiagram-v2
         Persistent: S3 tfstate ~$0.05/mo
         Persistent: ECR images ~$0.10/mo
         Persistent: Secrets Manager $0.40/mo
-        Persistent: Total ~$1/mo
+        Persistent: KMS Key $1.00/mo
+        Persistent: Total ~$1.55/mo
     }
 
     state Active {
@@ -444,6 +446,7 @@ verdict/
 | 007 | CloudWatch 1-day retention in dev | ~80% log cost savings |
 | 008 | Nightly teardown workflow | Caps blast radius |
 | 009 | AWS Load Balancer Controller | $0 additional cost in dev |
+| 010 | Secrets Manager + customer-managed KMS | ~$1.40/mo at rest cost |
 
 Full ADRs live in `docs/adrs/`.
 
