@@ -127,6 +127,7 @@ Verdict is designed for high budget efficiency, keeping at-rest costs to ~$1.55/
 |---|---|---|
 | **Active Cost (running)** | ~$0.12/hour | EKS control plane ($0.10/hr) + t3.small spot node ($0.007/hr) |
 | **At-Rest Cost (idle)** | ~$1.55/month | CMK Key ($1.00/mo) + Secrets Manager ($0.40/mo) + S3 tfstate ($0.05/mo) |
+| **Audited 8-Week Spend** | ~$8.42 USD | Cumulative spend across all 8 development weeks (budget limit: $100) |
 | **Hobbyist Runway** | ~9.7 months | Calculated on 80 active dev hours/month using a $100 credit |
 
 ### Cost Explorer Analysis
@@ -193,7 +194,7 @@ verdict/
 | **M1: Foundation Infrastructure** | Week 2 | Completed | Issues 1 - 7a |
 | **M2: Container Platform** | Week 4 | Completed | Issues 8 - 16 |
 | **M3: CI/CD Pipeline** | Week 6 | Completed | Issues 17 - 25a |
-| **M4: Observability and Security** | Week 8 | In Progress | Issues 26 - 32 |
+| **M4: Observability and Security** | Week 8 | Completed | Issues 26 - 32 |
 
 ---
 
