@@ -1,137 +1,202 @@
 # Verdict
 
-> Cloud-native PR-gating test execution platform on AWS.
-> Open a PR, get a verdict in under 3 minutes — automatic test detection, ephemeral EKS execution, merge blocked on failure.
+AWS-native test execution and PR-gating platform built on Amazon EKS.
 
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)]()
-[![Cost](https://img.shields.io/badge/monthly%20cost-~%245-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
+Verdict automates test runner provisioning by spinning up ephemeral testing pods on EKS when pull requests are created, running targeted python tests, and blocking or allowing the merge depending on execution outcomes.
+
+[![AWS Region](https://img.shields.io/badge/AWS%20Region-ap--south--1-orange)](https://aws.amazon.com/)
+[![EKS Version](https://img.shields.io/badge/EKS-1.30-blue)](https://aws.amazon.com/eks/)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](./LICENSE)
+[![Dev Month Cost](https://img.shields.io/badge/Dev%20Cost-~$1.55/mo%20at%20rest-brightgreen)](./architecture.md#7-cost-model)
 
 ---
 
 ## What It Does
 
+Verdict implements a secure, ephemeral pipeline that validates pull requests:
+
 ```mermaid
-flowchart LR
-    PR[Pull Request] --> Detect[Detect changed tests]
-    Detect --> Build[Build + push image]
-    Build --> Deploy[Deploy to EKS]
-    Deploy --> Run[Run tests in pod]
-    Run --> Verdict{Pass?}
-    Verdict -->|Yes| Allow[Merge allowed]
-    Verdict -->|No| Block[Merge blocked]
+flowchart TD
+    PR[1. Pull Request opened/synced] --> Detect[2. Detect changed test files]
+    Detect --> Build[3. Build container & push to ECR]
+    Build --> Deploy[4. Deploy ephemeral runner to EKS]
+    Deploy --> Run[5. Execute Pytest suite via FastAPI]
+    Run --> Comment[6. Post test results to PR comment]
+    Comment --> Gate{All tests pass?}
+    Gate -->|Yes| Allow[7. Pass status check & allow merge]
+    Gate -->|No| Block[7. Fail status check & block merge]
 
     style Allow fill:#d4edda,stroke:#155724
     style Block fill:#f8d7da,stroke:#721c24
 ```
 
-1. Developer opens a PR
-2. GitHub Actions detects changed `test_*.py` files
-3. Workflow builds the image, deploys to EKS via Helm
-4. Test runner pod executes only the changed tests
-5. Results posted as a PR comment; status check gates merge
+---
+
+## PR Gating in Action
+
+Every PR triggers automated execution. Results are posted as a sticky PR comment containing a summary table, execution metadata, and collapsible traceback details for failing tests.
+
+### Passing PR Gate
+When all changed tests pass, the status check turns green, allowing developers to merge.
+
+![Passing PR Comment](docs/images/passing_pr.png)
+
+### Failing PR Gate
+If any test fails, the status check is marked as failed, blocking the merge and displaying error tracebacks.
+
+![Failing PR Comment](docs/images/failing_pr.png)
+
+---
+
+## System Architecture
+
+Verdict is federated with GitHub using OIDC for keyless deployment. The development environment uses a single-AZ, spot-backed model to avoid NAT Gateway and ALB costs.
+
+```mermaid
+flowchart LR
+    Dev[Developer] -->|opens PR| GH[GitHub Repo]
+    GH -->|triggers| GHA[GitHub Actions Runner]
+    GHA -->|OIDC token exchange| IAM[(AWS IAM<br/>OIDC Provider)]
+    IAM -->|short-lived creds| GHA
+    GHA -->|docker push| ECR[(Amazon ECR)]
+    GHA -->|helm upgrade| EKS[Amazon EKS<br/>1 node, spot]
+    EKS -->|image pull| ECR
+    EKS -->|IRSA| SM[(Secrets Manager<br/>+ KMS)]
+    EKS -->|logs/metrics| CW[(CloudWatch)]
+    GHA -->|post PR comment| GH
+
+    style EKS fill:#fff4cc,stroke:#b58900
+    style GHA fill:#cce5ff,stroke:#004085
+    style IAM fill:#d4edda,stroke:#155724
+```
 
 ---
 
 ## Tech Stack
 
-| Layer | Tooling |
-|---|---|
-| Cloud | AWS (EKS, ECR, VPC, IAM, Secrets Manager, KMS, CloudWatch) |
-| IaC | Terraform (modular, remote state) |
-| Containers | Docker (multi-stage, non-root), Helm |
-| CI/CD | GitHub Actions, OIDC federation |
-| App | FastAPI (Python 3.12) |
-| Observability | CloudWatch Container Insights, structured JSON logs |
-| Security | IRSA, OIDC, KMS, pod hardening, ECR scan-on-push |
+| Component | Technology | Role |
+|---|---|---|
+| **Cloud Provider** | AWS (EKS, ECR, VPC, IAM, Secrets Manager, KMS, CloudWatch) | Base platform infrastructure |
+| **IaC** | Terraform >= 1.5 (AWS Provider 5.x) | Modular environment provisioning |
+| **Containers** | Docker, Helm v3 | Multi-stage image builds, pod packaging |
+| **CI/CD** | GitHub Actions | Runner execution, OIDC credential exchange |
+| **Application** | FastAPI (Python 3.12) | API endpoints to receive and run Pytest suites |
+| **Observability** | Container Insights, Logs Insights | Golden signal dashboard, structured JSON logs |
+| **Security** | OIDC, IRSA, KMS, Pod Security Context | Least privilege and defense-in-depth enforcement |
 
 ---
 
 ## Quick Start
 
-```bash
-# One-time setup (S3 tfstate, OIDC, Budget alarms)
-make bootstrap
+Follow these steps to deploy and test the platform locally.
 
-# Bring the stack live (EKS + app, ~$0.12/hr)
+### Prerequisites
+Install the following tools on your system:
+- AWS CLI configured with administrator privileges
+- Terraform >= 1.5
+- kubectl >= 1.28
+- Helm >= 3.12
+- Docker
+
+### Lifecycle Workflow
+
+```bash
+# 1. Initialize remote state and cost budgets (One-time step)
+make bootstrap ALERT_EMAIL=your-email@example.com
+
+# 2. Provision AWS infrastructure and deploy application to EKS
 make up
 
-# Verify
-kubectl port-forward -n verdict svc/verdict-app 8080:80
+# 3. Access and verify the application locally
+make demo
+
+# 4. In a separate terminal, execute a health check
 curl localhost:8080/health
 
-# Tear down (back to ~$1/mo)
+# 5. Tear down EKS resources and worker nodes to stop charges
 make down
 ```
-
-**Prerequisites:** AWS CLI, Terraform >= 1.5, kubectl >= 1.28, Helm >= 3.12, Docker.
 
 ---
 
 ## Cost Discipline
 
-Built to run on a **$100 AWS credit** for ~9 months at 80 active hrs/mo.
+Verdict is designed for high budget efficiency, keeping at-rest costs to ~$1.55/month and active costs to ~$0.12/hour.
 
-| State | Cost |
-|---|---|
-| Active (running) | ~$0.12/hr |
-| At rest (destroyed) | ~$1/mo |
-| 80 active hrs/mo | ~$10/mo |
+| Metric | Cost | Details |
+|---|---|---|
+| **Active Cost (running)** | ~$0.12/hour | EKS control plane ($0.10/hr) + t3.small spot node ($0.007/hr) |
+| **At-Rest Cost (idle)** | ~$1.55/month | CMK Key ($1.00/mo) + Secrets Manager ($0.40/mo) + S3 tfstate ($0.05/mo) |
+| **Hobbyist Runway** | ~9.7 months | Calculated on 80 active dev hours/month using a $100 credit |
 
-Cost guardrails enforced by:
-- AWS Budgets at $10 / $25 / $50 / $75 with email alerts
-- Spot instances, single AZ, no NAT Gateway, no ALB at rest
-- `make down` as the standard session-end reflex
-- Nightly teardown workflow as safety net
+### Cost Explorer Analysis
+The daily spend chart below showcases typical usage: spikes on active days (~$0.25) and flat baseline costs (~$0.05) on idle days.
 
----
+![AWS Cost Explorer Dashboard](docs/images/cost_explorer.png)
 
-## Security Highlights
-
-- **Zero static AWS credentials.** GitHub Actions uses OIDC federation; pods use IRSA.
-- **Scoped trust policies.** IAM role trust restricted to specific repo and service account.
-- **Secrets in Secrets Manager.** Encrypted with customer-managed KMS key, read via IRSA.
-- **Hardened pods.** Non-root, read-only filesystem, all capabilities dropped, seccomp default.
-- **Image scanning.** ECR scan-on-push, immutable tags.
+### Cost Guardrails
+- **AWS Budgets**: Four alert thresholds (10%, 25%, 50%, 75%) linked to SNS alerts.
+- **Nightly Teardown**: Scheduled cron workflow that destroys compute resources at 23:00 IST as cost insurance.
+- **No NAT/ALB**: Worker nodes run in public subnets with tight Security Groups. Local verification uses port-forwarding.
 
 ---
 
-## Repository Layout
+## Security Model
+
+- **Zero Static AWS Credentials**: GitHub Actions uses OIDC federation; application pods assume AWS roles via IAM Roles for Service Accounts (IRSA).
+- **Workload Hardening**: Application containers execute as non-root (UID 10001) with a read-only root filesystem, dropped Linux capabilities, and the default seccomp profile.
+- **Data Protection**: Secrets are stored in AWS Secrets Manager, encrypted using a customer-managed KMS key, and dynamically read on application startup.
+- **Registry Security**: ECR repositories are private, immutable, and configured to scan images on push.
+
+---
+
+## Repository Structure
 
 ```
 verdict/
-├── terraform/      # VPC, EKS, ECR, IAM, Secrets modules
-├── app/            # FastAPI test runner
-├── helm/           # Helm chart with dev and prod values
-├── .github/        # Workflows + scripts
-├── docs/           # ADRs and runbooks
-├── architecture.md # Full architecture documentation
-├── milestones.md   # Implementation plan (8 weeks, 35 issues)
-└── Makefile        # Lifecycle commands
+├── .github/
+│   ├── workflows/       # CI/CD pipelines (PR gate, deploy, nightly teardown)
+│   └── scripts/         # Pipeline helpers (changed test detection, PR commenting)
+├── app/
+│   ├── main.py          # FastAPI test runner implementation
+│   ├── Dockerfile       # Multi-stage hardened build
+│   └── tests/           # App and helper unit test suites
+├── docs/
+│   ├── adrs/            # Architecture Decision Records (ADRs 001 - 011)
+│   ├── runbooks/        # Teardown runbooks and checklists
+│   └── images/          # Documentation media and screenshots
+├── helm/
+│   └── verdict-app/     # Helm chart (dev/prod values profiles)
+├── terraform/
+│   ├── bootstrap/       # S3 backend, OIDC provider, budget topic
+│   └── modules/         # Reusable infra modules (VPC, EKS, ECR, IAM, Secrets)
+├── Makefile             # Platform lifecycle management targets
+├── architecture.md      # Detailed architectural specification
+└── milestones.md        # Project delivery milestones and issue tracking
 ```
 
 ---
 
-## Documentation
+## Documentation Links
 
-- **[architecture.md](./architecture.md)** — Full system design, diagrams, ADRs, cost model
-- **[milestones.md](./milestones.md)** — 8-week implementation plan with all issues
-- **[docs/adrs/](./docs/adrs/)** — Architecture Decision Records
-- **[docs/runbooks/](./docs/runbooks/)** — Cost controls and teardown checklist
+- **[architecture.md](./architecture.md)**: Full design specifications, network topologies, and detailed ADRs.
+- **[milestones.md](./milestones.md)**: The 8-week delivery plan consisting of 35 phased issues.
+- **[docs/adrs/](./docs/adrs/)**: Historical record of design decisions.
+- **[docs/runbooks/](./docs/runbooks/)**: Operational guides for cost cleanup and verification.
 
 ---
 
-## Status
+## Project Status
 
-| Milestone | Due | Status |
-|---|---|---|
-| 1. Foundation Infrastructure | Week 2 | Completed |
-| 2. Container Platform | Week 4 | Completed |
-| 3. CI/CD Pipeline | Week 6 | Completed |
-| 4. Observability and Security | Week 8 | In progress |
+| Milestone | Target | Status | Reference |
+|---|---|---|---|
+| **M1: Foundation Infrastructure** | Week 2 | Completed | Issues 1 - 7a |
+| **M2: Container Platform** | Week 4 | Completed | Issues 8 - 16 |
+| **M3: CI/CD Pipeline** | Week 6 | Completed | Issues 17 - 25a |
+| **M4: Observability and Security** | Week 8 | In Progress | Issues 26 - 32 |
 
 ---
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
