@@ -229,3 +229,10 @@ def test_load_application_secrets_failure(mock_boto_client: MagicMock) -> None:
 
     result = load_application_secrets(ignore_test_check=True)
     assert result is None
+
+
+def test_run_test_path_traversal() -> None:
+    """Tests /run-test returns 400 when path traversal is attempted."""
+    response = client.post("/run-test", json={"test_file": "../../../etc/passwd"})
+    assert response.status_code == 400
+    assert "Access denied: path traversal detected." in response.json()["detail"]

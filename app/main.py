@@ -185,30 +185,46 @@ def resolve_test_path(test_file: str) -> Path:
     """Resolves and validates the path of the target test file.
 
     Handles paths specified relative to either the workspace root or the
-    app directory itself.
+    app directory itself, preventing path traversal attacks.
 
     Args:
         test_file: The path to the test file.
 
     Returns:
         Path: The resolved Path object.
+
+    Raises:
+        ValueError: If the path is outside the allowed root directory or is invalid.
     """
-    path = Path(test_file)
-    if path.exists() and path.is_file():
-        return path.resolve()
+    app_root = Path("/app").resolve()
+    if not app_root.exists():
+        app_root = Path(".").resolve()
+        if app_root.name == "app":
+            app_root = app_root.parent
 
-    # If running from inside 'app/' directory and path starts with 'app/'
-    if test_file.startswith("app/") and Path(".").resolve().name == "app":
-        stripped_path = Path(test_file[4:])
-        if stripped_path.exists() and stripped_path.is_file():
-            return stripped_path.resolve()
+    # Adjust path if running from inside 'app/' directory on dev machine
+    cleaned_file = test_file
+    if cleaned_file.startswith("app/") and Path(".").resolve().name == "app":
+        cleaned_file = cleaned_file[4:]
 
-    # Try resolving relative to current working directory
-    cwd_path = Path(".").resolve() / test_file
-    if cwd_path.exists() and cwd_path.is_file():
-        return cwd_path.resolve()
+    # If running from inside 'app/' and the path is relative to it
+    if Path(".").resolve().name == "app" and not cleaned_file.startswith("/"):
+        candidate = (Path(".").resolve() / cleaned_file).resolve()
+        if (
+            candidate.exists()
+            and candidate.is_file()
+            and str(candidate).startswith(str(app_root))
+        ):
+            return candidate
 
-    return path
+    # Try resolving relative to app_root
+    resolved_path = (app_root / cleaned_file).resolve()
+
+    # Check if the resolved path starts with the app_root to prevent traversal
+    if not str(resolved_path).startswith(str(app_root)):
+        raise ValueError("Access denied: path traversal detected.")
+
+    return resolved_path
 
 
 @app.post("/run-test", response_model=TestRunResponse)
@@ -225,7 +241,14 @@ def run_test(payload: TestRunRequest) -> dict[str, Any]:
         HTTPException: If the test file is not found or execution fails.
     """
     logger.info("Received request to run test file: %s", payload.test_file)
-    resolved_path = resolve_test_path(payload.test_file)
+    try:
+        resolved_path = resolve_test_path(payload.test_file)
+    except ValueError as exc:
+        logger.error("Path validation failed: %s", str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
 
     if not resolved_path.exists() or not resolved_path.is_file():
         logger.error("Test file not found: %s", payload.test_file)
